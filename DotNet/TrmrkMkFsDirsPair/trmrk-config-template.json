@@ -1,0 +1,10 @@
+{
+  "KeepFileName": ".keep",
+  "NoteFileName": "[note]",
+  "NoteFilesFullDirNamePart": "[note-files]",
+  "FullDirNameJoinStr": "-",
+  "OpenMdFileCmdArgName": ":o",
+  "MaxDirNameLength": 100,
+  "KeepFileContentsTemplate": "",
+  "MdFileContentsTemplate": "# {0}  \n\n"
+}
