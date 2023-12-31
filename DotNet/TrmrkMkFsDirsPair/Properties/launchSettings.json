@@ -2,7 +2,7 @@
   "profiles": {
     "TrmrkMkFsDirsPair": {
       "commandName": "Project",
-      "commandLineArgs": "qwer1 asdf/asdf - :o"
+      "commandLineArgs": "\"0199 #\" code-files# \"\" :o"
       // "commandLineArgs": ""
     }
   }
