@@ -11,12 +11,14 @@ namespace TrmrkMkFsDirsPair
 {
     internal class ProgramConfigRetriever
     {
+        const string WORD_DIR = ":wd:";
         const string CONFIG_FILE_NAME = "trmrk-config.json";
         const string KEEP = ".keep";
         const string NOTE = "[note]";
         const string NOTE_FILES = "[note-files]";
         const string JOIN_STR = "-";
         const string OPEN_MD_FILE = ":o";
+        const string UPDATE_FULL_DIR_NAME = ":u";
         const string MD_FILE_CONTENTS_TEMPLATE = "# {0}  \n\n";
         const string KEEP_FILE_CONTENTS_TEMPLATE = "";
         const int MAX_DIR_NAME_LEN = 100;
@@ -72,13 +74,16 @@ namespace TrmrkMkFsDirsPair
         private void NormalizeConfig(
             ProgramConfig config)
         {
+            config.WorkDir ??= WORD_DIR;
             config.KeepFileName ??= KEEP;
             config.NoteFileName ??= NOTE;
             config.NoteFilesFullDirNamePart ??= NOTE_FILES;
             config.FullDirNameJoinStr ??= JOIN_STR;
             config.OpenMdFileCmdArgName ??= OPEN_MD_FILE;
+            config.UpdateFullDirName ??= UPDATE_FULL_DIR_NAME;
             config.MaxDirNameLength = config.MaxDirNameLength.Nullify() ?? MAX_DIR_NAME_LEN;
             config.KeepFileContentsTemplate ??= KEEP_FILE_CONTENTS_TEMPLATE;
+            config.KeepFileContainsNoteJson ??= false;
             config.MdFileContentsTemplate ??= MD_FILE_CONTENTS_TEMPLATE;
         }
 

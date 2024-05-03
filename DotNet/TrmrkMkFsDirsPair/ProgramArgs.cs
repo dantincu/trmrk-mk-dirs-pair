@@ -8,6 +8,7 @@ namespace TrmrkMkFsDirsPair
 {
     internal class ProgramArgs
     {
+        public string WorkDir { get; set; }
         public string ShortDirName { get; set; }
         public string Title { get; set; }
         public string FullDirNamePart { get; set; }
@@ -17,5 +18,6 @@ namespace TrmrkMkFsDirsPair
         public bool CreatePairForNoteFiles { get; set; }
         public bool OpenMdFile { get; set; }
         public bool DumpConfigFile { get; set; }
+        public bool UpdateFullDirName { get; set; }
     }
 }

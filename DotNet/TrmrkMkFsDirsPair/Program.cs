@@ -13,6 +13,6 @@ UtilsH.ExecuteProgram(() =>
     }
     else
     {
-        new ProgramComponent().Run(pgArgs);
+        new ProgramComponent(pgArgsRetriever).Run(pgArgs);
     }
 });

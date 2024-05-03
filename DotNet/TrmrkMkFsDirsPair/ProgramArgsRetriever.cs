@@ -27,55 +27,106 @@ namespace TrmrkMkFsDirsPair
 
             if (!pgArgs.DumpConfigFile)
             {
-                pgArgs.ShortDirName = args[0].Trim().Nullify() ?? throw new ArgumentNullException(
-                    nameof(pgArgs.ShortDirName));
+                var nextArgs = args.ToArray();
 
-                pgArgs.Title = args[1].Trim().Nullify();
-                pgArgs.FullDirNamePart = pgArgs.Title;
-                pgArgs.CreatePairForNoteFiles = pgArgs.FullDirNamePart == null;
-
-                if (pgArgs.CreatePairForNoteFiles)
+                if ((pgArgs.WorkDir = nextArgs.FirstOrDefault(
+                    arg => arg.StartsWith(
+                        config.WorkDir))?.Split(':')[2]!) != null)
                 {
-                    pgArgs.FullDirNamePart = config.NoteFilesFullDirNamePart;
+                    nextArgs = nextArgs.Except(
+                        nextArgs.Where(
+                            arg => arg.StartsWith(
+                        config.WorkDir))).ToArray();
                 }
                 else
                 {
-                    pgArgs.FullDirNamePart = NormalizeFullDirNamePart(
-                        pgArgs.FullDirNamePart);
+                    pgArgs.WorkDir = Directory.GetCurrentDirectory();
                 }
 
-                var nextArgs = args[2..];
-
-                if (pgArgs.OpenMdFile = nextArgs.Contains(
-                    config.OpenMdFileCmdArgName))
+                if (pgArgs.UpdateFullDirName = nextArgs.Contains(
+                    config.UpdateFullDirName))
                 {
                     nextArgs = nextArgs.Except(
-                        [config.OpenMdFileCmdArgName]).ToArray();
-                }
+                        [config.UpdateFullDirName]).ToArray();
 
-                if (!pgArgs.CreatePairForNoteFiles)
+                    if (nextArgs.Length > 0)
+                    {
+                        pgArgs.Title = nextArgs[0].Trim().Nullify();
+                        nextArgs = nextArgs[1..];
+
+                        if (nextArgs.Length > 0)
+                        {
+                            pgArgs.JoinStr = nextArgs[0];
+                        }
+                        else
+                        {
+                            pgArgs.JoinStr = config.FullDirNameJoinStr;
+                        }
+                    }
+                    else
+                    {
+                        pgArgs.JoinStr = config.FullDirNameJoinStr;
+                    }
+                }
+                else
                 {
-                    pgArgs.MdFileName = $"{pgArgs.FullDirNamePart}{config.NoteFileName}.md";
-                }
-                else if (pgArgs.OpenMdFile)
-                {
-                    throw new InvalidOperationException(
-                        $"Would not create a markdown file if creating a {config.NoteFilesFullDirNamePart} dirs pair");
-                }
+                    if (pgArgs.OpenMdFile = nextArgs.Contains(
+                    config.OpenMdFileCmdArgName))
+                    {
+                        nextArgs = nextArgs.Except(
+                            [config.OpenMdFileCmdArgName]).ToArray();
+                    }
 
-                pgArgs.JoinStr = nextArgs.FirstOrDefault() ?? config.FullDirNameJoinStr;
+                    pgArgs.ShortDirName = nextArgs[0].Trim(
+                        ).Nullify() ?? throw new ArgumentNullException(
+                            nameof(pgArgs.ShortDirName));
 
-                pgArgs.FullDirName = string.Join(
-                    pgArgs.JoinStr, pgArgs.ShortDirName,
-                    pgArgs.FullDirNamePart);
+                    pgArgs.Title = nextArgs[1].Trim().Nullify();
+                    pgArgs.FullDirNamePart = pgArgs.Title;
+                    pgArgs.CreatePairForNoteFiles = pgArgs.FullDirNamePart == null;
+
+                    if (pgArgs.CreatePairForNoteFiles)
+                    {
+                        pgArgs.FullDirNamePart = config.NoteFilesFullDirNamePart;
+                    }
+                    else
+                    {
+                        pgArgs.FullDirNamePart = NormalizeFullDirNamePart(
+                            pgArgs.FullDirNamePart);
+                    }
+
+                    nextArgs = nextArgs[2..];
+
+                    if (!pgArgs.CreatePairForNoteFiles)
+                    {
+                        pgArgs.MdFileName = $"{pgArgs.FullDirNamePart}{config.NoteFileName}.md";
+                    }
+                    else if (pgArgs.OpenMdFile)
+                    {
+                        throw new InvalidOperationException(
+                            $"Would not create a markdown file if creating a {config.NoteFilesFullDirNamePart} dirs pair");
+                    }
+
+                    pgArgs.JoinStr = nextArgs.FirstOrDefault(
+                        ) ?? config.FullDirNameJoinStr;
+
+                    pgArgs.FullDirName = string.Join(
+                        pgArgs.JoinStr, pgArgs.ShortDirName,
+                        pgArgs.FullDirNamePart);
+                }
             }
 
             return pgArgs;
         }
 
-        private string NormalizeFullDirNamePart(
+        public string NormalizeFullDirNamePart(
             string fullDirNamePart)
         {
+            if (fullDirNamePart.StartsWith(":"))
+            {
+                fullDirNamePart = fullDirNamePart.Substring(1);
+            }
+
             fullDirNamePart = fullDirNamePart.Replace('/', '%').Split(
                 Path.GetInvalidFileNameChars()).JoinStr(" ");
 

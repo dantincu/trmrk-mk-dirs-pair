@@ -6,5 +6,6 @@
   "OpenMdFileCmdArgName": ":o",
   "MaxDirNameLength": 100,
   "KeepFileContentsTemplate": "",
+  "KeepFileContainsNoteJson": true,
   "MdFileContentsTemplate": "# {0}  \n\n"
 }
