@@ -8,10 +8,22 @@ using System.Threading.Tasks;
 
 namespace TrmrkMkFsDirsPair
 {
+    /// <summary>
+    /// The program's main component that does the core part of the program's execution.
+    /// </summary>
     internal class ProgramComponent
     {
+        /// <summary>
+        /// The program args retriever component.
+        /// </summary>
         private readonly ProgramArgsRetriever pgArgsRetriever;
 
+        /// <summary>
+        /// The only constructor containing the component dependencies.
+        /// </summary>
+        /// <param name="pgArgsRetriever">The program args retriever component</param>
+        /// <exception cref="ArgumentNullException">Gets thrown when the value for <see cref="pgArgsRetriever" />
+        /// is <c>null</c></exception>
         public ProgramComponent(
             ProgramArgsRetriever pgArgsRetriever)
         {
@@ -19,22 +31,27 @@ namespace TrmrkMkFsDirsPair
                 nameof(pgArgsRetriever));
         }
 
+        /// <summary>
+        /// The component's main method that does the core part of the program's execution.
+        /// </summary>
+        /// <param name="pgArgs">The program args parsed from the user provided arguments
+        /// and normalized with the config values.</param>
         public void Run(ProgramArgs pgArgs)
         {
             var config = ProgramConfigRetriever.Instance.Value.Config;
-            string baseDirPath = Path.GetFullPath(pgArgs.WorkDir);
+            string workDirPath = Path.GetFullPath(pgArgs.WorkDir);
 
             if (pgArgs.UpdateFullDirName)
             {
-                UpdateFullDirName(pgArgs, config, baseDirPath);
+                UpdateFullDirName(pgArgs, config, workDirPath);
             }
             else
             {
                 string shortDirPath = GetDirPathAndThrowIfDirAlreadyExists(
-                    baseDirPath, pgArgs.ShortDirName);
+                    workDirPath, pgArgs.ShortDirName);
 
                 string fullDirPath = GetDirPathAndThrowIfDirAlreadyExists(
-                    baseDirPath, pgArgs.FullDirName);
+                    workDirPath, pgArgs.FullDirName);
 
                 Directory.CreateDirectory(shortDirPath);
                 Directory.CreateDirectory(fullDirPath);
@@ -67,18 +84,26 @@ namespace TrmrkMkFsDirsPair
             }
         }
 
+        /// <summary>
+        /// Updates the full folder name and markdown file name according to the title that was either
+        /// provided by the user or will be extracted from the markdown document.
+        /// </summary>
+        /// <param name="pgArgs">The program args parsed from the user provided arguments and normalized with the config values.</param>
+        /// <param name="config">The config object containing the normalized config values.</param>
+        /// <param name="workDirPath">The work dir path that has either been provided by the user or
+        /// assigned the value of <see cref="Directory.GetCurrentDirectory()" />.</param>
         public void UpdateFullDirName(
             ProgramArgs pgArgs,
             ProgramConfig config,
-            string baseDirPath)
+            string workDirPath)
         {
             var mdFileName = Directory.GetFiles(
-                baseDirPath).Select(
+                workDirPath).Select(
                     file => Path.GetFileName(file)).Single(
                     file => Path.GetExtension(file) == ".md");
 
             string mdFilePath = Path.Combine(
-                baseDirPath, mdFileName);
+                workDirPath, mdFileName);
 
             if (pgArgs.Title == null)
             {
@@ -110,10 +135,10 @@ namespace TrmrkMkFsDirsPair
             pgArgs.FullDirNamePart ??= pgArgsRetriever.NormalizeFullDirNamePart(
                 pgArgs.Title);
 
-            string baseDirName = Path.GetFileName(baseDirPath);
+            string baseDirName = Path.GetFileName(workDirPath);
 
             string parentDirPath = Path.GetDirectoryName(
-                baseDirPath)!;
+                workDirPath)!;
 
             string baseDirsPairPfx = string.Concat(
                 baseDirName, pgArgs.JoinStr);
@@ -127,7 +152,7 @@ namespace TrmrkMkFsDirsPair
                 pgArgs.JoinStr, baseDirName, pgArgs.FullDirNamePart);
 
             string newNoteFileName = $"{pgArgs.FullDirNamePart}{config.NoteFileName}.md";
-            string newNoteFilePath = Path.Combine(baseDirPath, newNoteFileName);
+            string newNoteFilePath = Path.Combine(workDirPath, newNoteFileName);
 
             string baseFullDirPath = Path.Combine(
                     parentDirPath, baseFullDirName);
@@ -148,6 +173,15 @@ namespace TrmrkMkFsDirsPair
             WriteKeepFile(config, pgArgs, newBaseFullDirPath);
         }
 
+        /// <summary>
+        /// Combines the provided base folder path and folder name and,
+        /// if the resulted path points to an existing directory, it throws an exception.
+        /// </summary>
+        /// <param name="baseDirPath">The parent folder path.</param>
+        /// <param name="dirName">The folder name</param>
+        /// <returns>The path resulted by combining the base folder path and folder name.</returns>
+        /// <exception cref="InvalidOperationException">Gets thrown when the resulted path points to
+        /// an existing directory.</exception>
         private string GetDirPathAndThrowIfDirAlreadyExists(
             string baseDirPath,
             string dirName)
@@ -164,6 +198,13 @@ namespace TrmrkMkFsDirsPair
             return dirPath;
         }
 
+        /// <summary>
+        /// Returns the text contents of the <c>.keep</c> file name that will reside in the full name folder.
+        /// </summary>
+        /// <param name="config">An object containing the normalized config values.</param>
+        /// <param name="pgArgs">An object containing the program args parsed from the user provided arguments and normalized
+        /// with the config values.</param>
+        /// <returns>The text contents of the <c>.keep</c> file that will reside in the full name folder.</returns>
         private string GetKeepFileContents(
             ProgramConfig config,
             ProgramArgs pgArgs)
@@ -192,6 +233,13 @@ namespace TrmrkMkFsDirsPair
             return keepFileContents;
         }
 
+        /// <summary>
+        /// Creates or overwrites the <c>.keep</c> file that will reside in the full name folder.
+        /// </summary>
+        /// <param name="config">An object containing the normalized config values.</param>
+        /// <param name="pgArgs">An object containing the program args parsed from the user provided arguments and normalized
+        /// with the config values.</param>
+        /// <param name="fullDirPath">The full name folder path.</param>
         private void WriteKeepFile(
             ProgramConfig config,
             ProgramArgs pgArgs,

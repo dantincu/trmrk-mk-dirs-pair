@@ -5,14 +5,19 @@ UtilsH.ExecuteProgram(() =>
 {
     var pgArgsRetriever = new ProgramArgsRetriever();
     var pgArgs = pgArgsRetriever.GetProgramArgs(args);
+    var cfgRetriever = ProgramConfigRetriever.Instance.Value;
 
-    if (pgArgs.DumpConfigFile)
+    if (pgArgs.PrintHelp)
     {
-        var cfgRetriever = ProgramConfigRetriever.Instance.Value;
-        cfgRetriever.DumpConfig();
+        pgArgsRetriever.PrintHelp(cfgRetriever.Config);
     }
     else
     {
+        if (pgArgs.DumpConfigFile)
+        {
+            cfgRetriever.DumpConfig(pgArgs.DumpConfigFileName);
+        }
+
         new ProgramComponent(pgArgsRetriever).Run(pgArgs);
     }
 });

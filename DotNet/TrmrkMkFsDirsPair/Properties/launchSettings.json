@@ -2,10 +2,11 @@
   "profiles": {
     "TrmrkMkFsDirsPair": {
       "commandName": "Project",
-      // "commandLineArgs": "999 asdfasdfqwerqwe :wd:workDir"
+      "commandLineArgs": ""
+      // "commandLineArgs": "997 asdfasdfqwerqwe :wd:workDir"
       // "commandLineArgs": ":wd:workDir\\998 :u zxcvzxc"
       // "commandLineArgs": ":wd:workDir\\998 :u"
-      "commandLineArgs": "02 \"\""
+      // "commandLineArgs": "03 \"\""
     }
   }
 }
