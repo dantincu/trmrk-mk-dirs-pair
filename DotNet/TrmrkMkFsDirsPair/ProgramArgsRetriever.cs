@@ -373,8 +373,11 @@ namespace TrmrkMkFsDirsPair
                             ConsoleColor.Black
                         },
                         config.FullDirNameJoinStr], [ resetColor, ""]), 2 ],
-                [ 1, ConsoleColor.DarkCyan, "Happy note taking!", resetColor, 2],
+                [ 1, ConsoleColor.DarkCyan, "You can find the source code for this tool at the following url:" ],
+                [ ConsoleColor.DarkGreen, ProgramComponent.REPO_URL, resetColor, 2 ]
             ]);
+
+            // Console.WriteLine("Happy note taking!");
         }
 
         private object[] Flatten(params object[][] src) => src.SelectMany(o => o).ToArray();

@@ -13,6 +13,8 @@ namespace TrmrkMkFsDirsPair
     /// </summary>
     internal class ProgramComponent
     {
+        public const string REPO_URL = "https://github.com/dantincu/trmrk-mk-dirs-pair";
+
         /// <summary>
         /// The program args retriever component.
         /// </summary>
