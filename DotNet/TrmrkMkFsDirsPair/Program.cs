@@ -3,7 +3,9 @@ using TrmrkMkFsDirsPair;
 
 UtilsH.ExecuteProgram(() =>
 {
-    var pgArgsRetriever = new ProgramArgsRetriever();
+    var pgArgsRetriever = new ProgramArgsRetriever(
+        new ConsoleMsgPrinter());
+
     var pgArgs = pgArgsRetriever.GetProgramArgs(args);
     var cfgRetriever = ProgramConfigRetriever.Instance.Value;
 
@@ -18,6 +20,7 @@ UtilsH.ExecuteProgram(() =>
             cfgRetriever.DumpConfig(pgArgs.DumpConfigFileName);
         }
 
-        new ProgramComponent(pgArgsRetriever).Run(pgArgs);
+        new ProgramComponent(
+            pgArgsRetriever).Run(pgArgs);
     }
 });

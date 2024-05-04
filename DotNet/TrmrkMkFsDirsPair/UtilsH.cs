@@ -136,7 +136,7 @@ namespace TrmrkMkFsDirsPair
         public static void ExecuteProgram(
             Action program)
         {
-            Console.WriteLine();
+            // Console.WriteLine();
 
             try
             {
@@ -159,7 +159,24 @@ namespace TrmrkMkFsDirsPair
                 Console.ResetColor();
             }
 
-            Console.WriteLine();
+            // Console.WriteLine();
+        }
+
+        /// <summary>
+        /// Returns the input string with the first letter changed to the uppercase variant if the provided was a lowercase variant.
+        /// </summary>
+        /// <param name="str">The input string.</param>
+        /// <returns>The input instance of type <see cref="string"/> having its first letter converted to
+        /// its uppercase variant</returns>
+        public static string CapitalizeFirstLetter(
+            this string str)
+        {
+            if (str.Any())
+            {
+                str = char.ToUpperInvariant(str[0]) + str[1..];
+            }
+
+            return str;
         }
     }
 }
