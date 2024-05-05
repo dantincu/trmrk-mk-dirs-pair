@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -17,6 +18,9 @@ namespace TrmrkMkFsDirsPair
         /// along with the <c>.json</c> config file for this program reside.
         /// </summary>
         public static readonly string ExecutingAssemmblyPath = AppDomain.CurrentDomain.BaseDirectory;
+
+        public static ReadOnlyDictionary<TKey, TValue> RdnlD<TKey, TValue>(
+            this Dictionary<TKey, TValue> dictnr) => new ReadOnlyDictionary<TKey, TValue>(dictnr);
 
         /// <summary>
         /// Searches the provided enumerable for and returns the first item that satisfies the condition specified by the provided
@@ -67,6 +71,36 @@ namespace TrmrkMkFsDirsPair
             this IEnumerable<T> nmrbl,
             Func<T, bool> predicate) => nmrbl.FirstKvp(
                 (item, idx) => predicate(item));
+
+        public static T FirstNotNull<T>(
+            this T first,
+            params T[] nextArr) => first ?? nextArr.FirstOrDefault(
+                item => item != null)!;
+
+        public static T FirstNotDefault<T>(
+            this T first,
+            T[] nextArr,
+            Func<T, T, bool> eqCompr = null)
+        {
+            eqCompr ??= EqualityComparer<T>.Default.Equals;
+
+            T retVal = first;
+
+            if (eqCompr(retVal, default))
+            {
+                foreach (var item in nextArr)
+                {
+                    retVal = item;
+
+                    if (!eqCompr(retVal, default))
+                    {
+                        break;
+                    }
+                }
+            }
+
+            return retVal;
+        }
 
         /// <summary>
         /// Returns the provided input string if it is not null or empty or the <c>null</c> value otherwise.

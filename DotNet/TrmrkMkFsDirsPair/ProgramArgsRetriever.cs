@@ -18,7 +18,7 @@ namespace TrmrkMkFsDirsPair
         /// <summary>
         /// The console message printer component.
         /// </summary>
-        private readonly ConsoleMsgPrinter consoleMsgPrinter;
+        private readonly IConsoleMsgPrinter consoleMsgPrinter;
 
         /// <summary>
         /// The program config retriever (the component that retrieves the normalized config values).
@@ -34,12 +34,15 @@ namespace TrmrkMkFsDirsPair
         /// The only constructor of the component which initializes the config object.
         /// </summary>
         public ProgramArgsRetriever(
-            ConsoleMsgPrinter consoleMsgPrinter)
+            IConsoleMsgPrinter consoleMsgPrinter,
+            ProgramConfigRetriever cfgRetriever)
         {
             this.consoleMsgPrinter = consoleMsgPrinter ?? throw new ArgumentNullException(
                 nameof(consoleMsgPrinter));
 
-            cfgRetriever = ProgramConfigRetriever.Instance.Value;
+            this.cfgRetriever = cfgRetriever ?? throw new ArgumentNullException(
+                nameof(cfgRetriever));
+
             config = cfgRetriever.Config;
         }
 
@@ -60,7 +63,7 @@ namespace TrmrkMkFsDirsPair
         {
             var pgArgs = new ProgramArgs
             {
-                PrintHelp = args.Length == 0
+                PrintHelp = args.Length == 0 || args.First() == config.PrintHelpMessage
             };
 
             if (!pgArgs.PrintHelp)
@@ -209,8 +212,8 @@ namespace TrmrkMkFsDirsPair
         /// <summary>
         /// Prints the help message to the command prompt for the user.
         /// </summary>
-        /// <param name="config"></param>
-        public void PrintHelp(ProgramConfig config)
+        /// <param name="config">An object containing the config values.</param>
+        public void PrintHelp1(ProgramConfig config)
         {
             var resetColor = new ConsoleColor?[] { };
             int optsPaddingLen = 20;
@@ -380,6 +383,182 @@ namespace TrmrkMkFsDirsPair
             // Console.WriteLine("Happy note taking!");
         }
 
-        private object[] Flatten(params object[][] src) => src.SelectMany(o => o).ToArray();
+        /// <summary>
+        /// Prints the help message to the command prompt for the user.
+        /// </summary>
+        /// <param name="config">An object containing the config values.</param>
+        public void PrintHelp(ProgramConfig config)
+        {
+            var x = consoleMsgPrinter.GetDefaultExpressionValues();
+            int optsPaddingLen = 20;
+
+            string optsPadd = new string(
+                Enumerable.Range(0, optsPaddingLen).Select(
+                    i => '*').ToArray());
+
+            Func<int, string> optsPadding = (
+                strLen) => optsPadd.Substring(strLen);
+
+            Func<string, string, string> optsHead = (optsStr, sffxStr) =>
+            {
+                var optsPaddingStr = optsPadding(optsStr.Length + sffxStr.Length);
+                var retStr = $"{{{x.DarkCyan}}}{optsStr}{{{x.Splitter}}}{sffxStr}{{{x.DarkGray}}} {optsPaddingStr}";
+
+                return retStr;
+            };
+
+            var m = new
+            {
+                ThisTool = ToMsgTuple($"{{{x.DarkCyan}}}", "this tool", x.Splitter),
+                NoArguments = ToMsgTuple($"{{{x.DarkCyan}}}", "no arguments", x.Splitter),
+                Arguments = ToMsgTuple($"{{{x.DarkCyan}}}", "arguments", x.Splitter),
+                Argument = ToMsgTuple($"{{{x.DarkCyan}}}", "argument", x.Splitter),
+                Prints = ToMsgTuple($"{{{x.DarkCyan}}}", "prints", x.Splitter),
+                PrintingThisHelpMessage = ToMsgTuple($"{{{x.DarkCyan}}}", "printing this help message", x.Splitter),
+
+                TakeNotes = ToMsgTuple($"{{{x.Blue}}}", "take notes", x.Splitter),
+                PairOfFolders = ToMsgTuple($"{{{x.Blue}}}", "pair of folders", x.Splitter),
+                FoldersPair = ToMsgTuple($"{{{x.Blue}}}", "folders pair", x.Splitter),
+                OneFolder = ToMsgTuple($"{{{x.Blue}}}", "one folder", x.Splitter),
+                Note = ToMsgTuple($"{{{x.Blue}}}", "note", x.Splitter),
+                New = ToMsgTuple($"{{{x.Blue}}}", "new", x.Splitter),
+                Newly = ToMsgTuple($"{{{x.Blue}}}", "newly", x.Splitter),
+
+                Creating = ToMsgTuple($"{{{x.Green}}}", "creating", x.Splitter),
+                Created = ToMsgTuple($"{{{x.Green}}}", "created", x.Splitter),
+                Optional = ToMsgTuple($"{{{x.Green}}}", "optional", x.Splitter),
+
+                Renaming = ToMsgTuple($"{{{x.Magenta}}}", "renaming", x.Splitter),
+                Renamed = ToMsgTuple($"{{{x.Magenta}}}", "renamed", x.Splitter),
+                Instead = ToMsgTuple($"{{{x.Magenta}}}", "instead", x.Splitter),
+                Updates = ToMsgTuple($"{{{x.Magenta}}}", "updates", x.Splitter),
+                Updating = ToMsgTuple($"{{{x.Magenta}}}", "updating", x.Splitter),
+                Mandatory = ToMsgTuple($"{{{x.Magenta}}}", "mandatory", x.Splitter),
+                Not = ToMsgTuple($"{{{x.Magenta}}}", "not", x.Splitter),
+                But = ToMsgTuple($"{{{x.Magenta}}}", "but", x.Splitter),
+
+                One = ToMsgTuple($"{{{x.Cyan}}}", "one", x.Splitter),
+                TheSame = ToMsgTuple($"{{{x.Cyan}}}", "the same", x.Splitter),
+                Above = ToMsgTuple($"{{{x.Cyan}}}", "above", x.Splitter),
+                Followed = ToMsgTuple($"{{{x.Cyan}}}", "followed", x.Splitter),
+                And = ToMsgTuple($"{{{x.Cyan}}}", "and", x.Splitter),
+                Next = ToMsgTuple($"{{{x.Cyan}}}", "next", x.Splitter),
+                First = ToMsgTuple($"{{{x.Cyan}}}", "first", x.Splitter),
+                Second = ToMsgTuple($"{{{x.Cyan}}}", "second", x.Splitter),
+                Third = ToMsgTuple($"{{{x.Cyan}}}", "third", x.Splitter),
+
+                Starting = ToMsgTuple($"{{{x.Yellow}}}", "starting", x.Splitter),
+                With = ToMsgTuple($"{{{x.Yellow}}}", "with", x.Splitter),
+                Current = ToMsgTuple($"{{{x.Yellow}}}", "current", x.Splitter),
+                Change = ToMsgTuple($"{{{x.Yellow}}}", "change", x.Splitter),
+                OneSpecified = ToMsgTuple($"{{{x.Yellow}}}", "one specified", x.Splitter),
+                NextOption = ToMsgTuple($"{{{x.Yellow}}}", "next option", x.Splitter),
+                Open = ToMsgTuple($"{{{x.Yellow}}}", "open", x.Splitter),
+                Dump = ToMsgTuple($"{{{x.Yellow}}}", "dump", x.Splitter),
+                Extracted = ToMsgTuple($"{{{x.Yellow}}}", "extracted", x.Splitter),
+                MarkdownFileEditor = ToMsgTuple($"{{{x.Yellow}}}", "markdown file editor", x.Splitter),
+                EmptyOrAllWhiteSpaces = ToMsgTuple($"{{{x.Yellow}}}", "empty or all-white-spaces", x.Splitter),
+
+                Short = ToMsgTuple($"{{{x.DarkYellow}}}", "short", x.Splitter),
+                Full = ToMsgTuple($"{{{x.DarkYellow}}}", "full", x.Splitter),
+                Name = ToMsgTuple($"{{{x.DarkYellow}}}", "name", x.Splitter),
+                Folder = ToMsgTuple($"{{{x.DarkYellow}}}", "folder", x.Splitter),
+                File = ToMsgTuple($"{{{x.DarkYellow}}}", "file", x.Splitter),
+                Title = ToMsgTuple($"{{{x.DarkYellow}}}", "title", x.Splitter),
+                NoteItem = ToMsgTuple($"{{{x.DarkYellow}}}", "note item", x.Splitter),
+                NoteFiles = ToMsgTuple($"{{{x.DarkYellow}}}", "note files", x.Splitter),
+                JoinString = ToMsgTuple($"{{{x.DarkYellow}}}", "join string", x.Splitter),
+                MarkdownFile = ToMsgTuple($"{{{x.DarkYellow}}}", "markdown file", x.Splitter),
+                WorkingDirectory = ToMsgTuple($"{{{x.DarkYellow}}}", "working directory", x.Splitter)
+            };
+
+            var joinString = $"{{{x.White}-{x.Black}}}{config.FullDirNameJoinStr}";
+
+            string[] linesArr = [
+                $"{{{x.DarkCyan}}}Welcome to the Turmerik MkFsDirsPair note taking tool!{{{x.NewLine}}}",
+
+                string.Join(" ", $"{m.ThisTool.U}{{{x.Splitter}}} helps you {m.TakeNotes.L} by {m.Creating.L}",
+                    $"or {m.Renaming.L} a {m.PairOfFolders.L} starting {m.With.L} {m.TheSame.L}",
+                    $"{m.Short.L} {m.Name.L} you provided {m.Above.L}, {m.Followed.L} by",
+                    $"a short {m.JoinString.L} {m.And.L} the {m.Name.L} you would usually give to",
+                    $"{m.OneFolder.L} representing a {m.Note.L}{{{x.NewLine}}}"),
+
+                string.Join(" ", $"Running {m.ThisTool.L} with {m.NoArguments.L} has no effect other than",
+                    $"{m.PrintingThisHelpMessage.L}{{{x.NewLine}}}"),
+
+                $"Here is a list of argument options {m.ThisTool.L} supports:{{{x.NewLine}}}{{{x.NewLine}}}",
+
+                string.Join(" ", optsHead(config.UpdateFullDirNameCmdArgName, ""),
+                    $"{m.Instead.U} of {m.Creating.L} a {m.New.L} {m.PairOfFolders.L}, it {m.Updates.L}",
+                    $"the {m.MarkdownFile.L} and the {m.Full.L} {m.Name.L} {m.Folder.L} for the {m.Current.L}",
+                    $"{m.WorkingDirectory.L} (or the {m.OneSpecified.L} with the {m.NextOption.L}){{{x.NewLine}}}{{{x.NewLine}}}"),
+
+                string.Join(" ", optsHead(config.WorkDirCmdArgName, "<file_name>"),
+                    $"{m.Change.U} the {m.WorkingDirectory.L} where the {m.PairOfFolders.L} will be",
+                    $"{m.Created.L} (or {m.Renamed.L}){{{x.NewLine}}}{{{x.NewLine}}}"),
+
+                string.Join(" ", optsHead(config.OpenMdFileCmdArgName, ""),
+                    $"{m.Open.U} the {m.Newly.L} {m.Created.L} {m.MarkdownFile.L} after the",
+                    $"{m.PairOfFolders.L} has been {m.Created.L} with the OS default",
+                    $"{m.MarkdownFileEditor.L}{{{x.NewLine}}}{{{x.NewLine}}}"),
+
+                string.Join(" ", optsHead(config.DumpConfigFileCmdArgName, ":<?file_name>"),
+                    $"{m.Dump.U} the current config values to a {m.File.L}{{{x.NewLine}}}{{{x.NewLine}}}"),
+
+                string.Join(" ", optsHead(config.PrintHelpMessage, ""),
+                    $"{m.Prints.U} this help message{{{x.NewLine}}}{{{x.NewLine}}}"),
+
+                string.Join(" ", $"And here is what the main arguments you pass to",
+                    $"{m.ThisTool.L} should be:{{{x.NewLine}}}"),
+            
+                string.Join(" ", $"If you're {m.Creating.L} a {m.New.L} {m.PairOfFolders.L},",
+                    $"the {m.First.L} {m.Argument.L} is {m.Mandatory.L} and should be the",
+                    $"{m.Short.L} {m.Folder.L} {m.Name.L} and the {m.Second.L} {m.One.L}",
+                    $"should be the {m.Note.L} {m.Title.L}. If you don't specify a {m.Second.L}",
+                    $"{m.Argument.L} or specify an {m.EmptyOrAllWhiteSpaces.L} string as a {m.Title.L},",
+                    $"a {m.PairOfFolders.L} for {m.NoteFiles.L} will be {m.Created.L} {m.Instead.L} of a",
+                    $"{m.NoteItem.L} {m.FoldersPair.L}. In both cases, the {m.Third.L} {m.Argument.L}",
+                    $"is {m.Optional.L} and represents the {m.JoinString.L} for the {m.Full.L}",
+                    $"{m.Folder.L} {m.Name.L}. If you don't provide a {m.Third.L} {m.Argument.L},",
+                    $"the following string will be used as {m.JoinString.L}: {joinString}{{{x.Splitter}}}{{{x.NewLine}}}"),
+
+                string.Join(" ", $"If, on the other hand, you're {m.Not.L} {m.Creating.L} a {m.New.L}",
+                    $"{m.PairOfFolders.L}, {m.But.L} {m.Updating.L} the {m.MarkdownFile.L} and the",
+                    $"{m.Full.L} {m.Name.L} {m.Folder.L} for the {m.WorkingDirectory.L}, all",
+                    $"further {m.Arguments.L} are {m.Optional.L}. You can still provide between 1 and 2",
+                    $"{m.Arguments.L}. If you do, the {m.First.L} {m.One.L} will be used as the",
+                    $"{m.New.L} {m.Title.L} for the {m.Current.L} {m.Note.L} to bre {m.Renamed.L} to.",
+                    $"If you don't provide the {m.First.L} {m.Argument.L} or pass in an",
+                    $"{m.EmptyOrAllWhiteSpaces.L} string, the {m.Title.L} will be {m.Extracted.L}",
+                    $"from the {m.MarkdownFile.L} residing in the {m.WorkingDirectory.L}.",
+                    $"Lastly, if you provide the {m.Second.L} {m.Argument.L}, it will be used for the",
+                    $"{m.JoinString.L}. Otherwise, the {m.JoinString.L} takes the same default value as for when",
+                    $"{m.Creating.L} a {m.New.L} {m.PairOfFolders.L}: {joinString}{{{x.Splitter}}}{{{x.NewLine}}}{{{x.NewLine}}}"),
+
+                    $"{{{x.DarkCyan}}}You can find the source code for this tool at the following url:",
+                    $"{{{x.DarkGreen}}}{ProgramComponent.REPO_URL}{{{x.Splitter}}}{{{x.NewLine}}}{{{x.NewLine}}}"];
+
+            consoleMsgPrinter.Print(linesArr, null, x);
+        }
+
+        private object[] Flatten(
+            params object[][] src) => src.SelectMany(
+                o => o).ToArray();
+
+        private StrMsgTuple ToMsgTuple(
+            string prefix,
+            string text,
+            string splitter)
+        {
+            var upperText = text.CapitalizeFirstLetter();
+
+            var retTuple = new StrMsgTuple
+            {
+                L = $"{prefix}{text}{{{splitter}}}",
+                U = $"{prefix}{upperText}{{{splitter}}}"
+            };
+
+            return retTuple;
+        }
     }
 }

@@ -3,7 +3,6 @@
   "NoteFileName": "[note]",
   "NoteFilesFullDirNamePart": "[note-files]",
   "FullDirNameJoinStr": "-",
-  "OpenMdFileCmdArgName": ":o",
   "MaxDirNameLength": 100,
   "KeepFileContentsTemplate": "",
   "KeepFileContainsNoteJson": true,

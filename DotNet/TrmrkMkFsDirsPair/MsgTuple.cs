@@ -6,9 +6,17 @@ using System.Threading.Tasks;
 
 namespace TrmrkMkFsDirsPair
 {
-    public class MsgTuple
+    public class MsgTupleCore<T>
     {
-        public object[] L { get; set; }
-        public object[] U { get; set; }
+        public T L { get; set; }
+        public T U { get; set; }
+    }
+
+    public class MsgTuple : MsgTupleCore<object[]>
+    {
+    }
+
+    public class StrMsgTuple : MsgTupleCore<string>
+    {
     }
 }

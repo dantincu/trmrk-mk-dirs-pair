@@ -39,6 +39,12 @@ namespace TrmrkMkFsDirsPair
         public string DumpConfigFileCmdArgName { get; set; }
 
         /// <summary>
+        /// Gets or sets the name of the program arguments flag indicating that instead of the normal program execution,
+        /// the help message should be printed to the console.
+        /// </summary>
+        public string PrintHelpMessage { get; set; }
+
+        /// <summary>
         /// Gets or sets the name of the program arguments flag indicating the work dir path.
         /// </summary>
         public string WorkDirCmdArgName { get; set; }

@@ -62,6 +62,11 @@ namespace TrmrkMkFsDirsPair
         const string UPDATE_FULL_DIR_NAME = ":u";
 
         /// <summary>
+        /// The default value for the print help message user arguments flag.
+        /// </summary>
+        const string PRINT_HELP_MESSAGE = ":h";
+
+        /// <summary>
         /// The default value for the markdown file text contents template.
         /// </summary>
         const string MD_FILE_CONTENTS_TEMPLATE = "# {0}  \n\n";
@@ -79,7 +84,7 @@ namespace TrmrkMkFsDirsPair
         /// <summary>
         /// The only constructor of the singleton component where the config is being read from the disk and normalized.
         /// </summary>
-        private ProgramConfigRetriever()
+        public ProgramConfigRetriever()
         {
             Config = GetConfig();
         }
@@ -166,6 +171,7 @@ namespace TrmrkMkFsDirsPair
             config.FullDirNameJoinStr ??= JOIN_STR;
             config.OpenMdFileCmdArgName ??= OPEN_MD_FILE;
             config.UpdateFullDirNameCmdArgName ??= UPDATE_FULL_DIR_NAME;
+            config.PrintHelpMessage ??= PRINT_HELP_MESSAGE;
             config.MaxDirNameLength = config.MaxDirNameLength.Nullify() ?? MAX_DIR_NAME_LEN;
             config.KeepFileContentsTemplate ??= KEEP_FILE_CONTENTS_TEMPLATE;
             config.KeepFileContainsNoteJson ??= false;
