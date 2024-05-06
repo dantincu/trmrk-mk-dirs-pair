@@ -19,6 +19,148 @@ namespace TrmrkMkFsDirsPair
     public delegate bool? ConsoleMsgPrinterAction(object[][] msg, int lineIdx, int chunkIdx);
 
     /// <summary>
+    /// The interface implemented by the console message printer.
+    /// </summary>
+    public interface IConsoleMsgPrinter
+    {
+        /// <summary>
+        /// Returns the default expression values for console message printing.
+        /// </summary>
+        /// <param name="useNames">Nullable (3 state) boolean value indicating what type of values to
+        /// assign to expressions. If set to <c>true</c>, it provides full enum names for console colors
+        /// and full name for new line expression. If set to <c>false</c>, it provides enum number values for
+        /// console colors and short name for new line expression. If set to <c>null</c>, it provides short names
+        /// for console colors and new line expression.</param>
+        /// <returns>An object containing the default expression values for console message printing.</returns>
+        ConsoleMsgPrinterExprValues GetDefaultExpressionValues(
+            bool? useNames = null);
+
+        /// <summary>
+        /// Parses the console color from the provided expression value.
+        /// </summary>
+        /// <param name="exprValue">The input expression value.</param>
+        /// <param name="exprValuesMap">The expression values object.</param>
+        /// <returns>An object containing the expression values.</returns>
+        ConsoleColor? ParseColor(
+            string exprValue,
+            ConsoleMsgPrinterExprValues exprValuesMap);
+
+        /// <summary>
+        /// The print method that does the job of printing the message to command prompt.
+        /// </summary>
+        /// <param name="rowsArr">The input rows.</param>
+        /// <param name="expressionTextParserOpts">An object containing the options for expression tedxt parser.</param>
+        /// <param name="useNamesForExprValues">Nullable (3 state) boolean value indicating what type of values to
+        /// assign to expressions. Used by method <see cref="GetDefaultExpressionValues" />.</param>
+        /// <param name="resetConsoleAction">An optional callback that will be called instead of <see cref="Console.ResetColor" />
+        /// method when the current input argument item (row cell) is a zero-length array of type
+        /// <see cref="Nullable{ConsoleColor}" /> of <see cref="ConsoleColor" />.</param>
+        void Print(
+            string[] rowsArr,
+            ExpressionTextParserOpts expressionTextParserOpts,
+            bool? useNamesForExprValues,
+            ConsoleMsgPrinterAction resetConsoleAction = null);
+
+        /// <summary>
+        /// The print method that does the job of printing the message to command prompt.
+        /// </summary>
+        /// <param name="rowsArr">The input rows.</param>
+        /// <param name="exprValues">The expression values.</param>
+        /// <param name="expressionTextParserOpts">An object containing the options for expression tedxt parser.</param>
+        /// <param name="resetConsoleAction">An optional callback that will be called instead of <see cref="Console.ResetColor" />
+        /// method when the current input argument item (row cell) is a zero-length array of type
+        /// <see cref="Nullable{ConsoleColor}" /> of <see cref="ConsoleColor" />.</param>
+        void Print(
+            string[] rowsArr,
+            ExpressionTextParserOpts expressionTextParserOpts,
+            ConsoleMsgPrinterExprValues exprValues = null,
+            ConsoleMsgPrinterAction resetConsoleAction = null);
+
+        /// <summary>
+        /// The print method that does the job of printing the message to command prompt.
+        /// </summary>
+        /// <param name="linesArr">The lines to be printed.</param>
+        /// <param name="expressionTextParserOpts">An object containing the options for expression tedxt parser.</param>
+        /// <param name="resetConsoleAction">An optional callback that will be called instead of <see cref="Console.ResetColor" />
+        /// method when the current input argument item (row cell) is a zero-length array of type
+        /// <see cref="Nullable{ConsoleColor}" /> of <see cref="ConsoleColor" />.</param>
+        void Print(
+            string[] linesArr,
+            ExpressionTextParserOpts expressionTextParserOpts = null,
+            ConsoleMsgPrinterAction resetConsoleAction = null);
+
+        /// <summary>
+        /// The print method that does the job of printing the message to command prompt.
+        /// </summary>
+        /// <param name="msg">The input argument containing rows of arrays of objects. It largely matches
+        /// the text words to be printed, in that the rows correspond to new lines and the column array items represent
+        /// words separated by the space character, although both of these conventions can be cancelled given the appropriate
+        /// array item data type.</param>
+        /// <param name="resetConsoleAction">An optional callback that will be called instead of <see cref="Console.ResetColor" />
+        /// method when the current input argument item (row cell) is a zero-length array of type
+        /// <see cref="Nullable{ConsoleColor}" /> of <see cref="ConsoleColor" />.</param>
+        void Print(object[][] msg,
+            ConsoleMsgPrinterAction resetConsoleAction = null);
+    }
+
+    /// <summary>
+    /// Base class for DTOs containing information for printing a message to the console.
+    /// </summary>
+    /// <typeparam name="T">The type of values for this object's properties.</typeparam>
+    public class ConsoleMsgTupleCore<T>
+    {
+        /// <summary>
+        /// The all-lowercase variant that is used by default.
+        /// </summary>
+        public T L { get; set; }
+
+        /// <summary>
+        /// The first-letter-uppercase variant that is used at the begining of a sentence.
+        /// </summary>
+        public T U { get; set; }
+    }
+
+    /// <summary>
+    /// A console message tuple that can be used directly by the
+    /// <see cref="IConsoleMsgPrinter.Print(object[][], ConsoleMsgPrinterAction)" /> method directly.
+    /// </summary>
+    public class ConsoleMsgTuple : ConsoleMsgTupleCore<object[]>
+    {
+    }
+
+    /// <summary>
+    /// A console message tuple that can be used by
+    /// <see cref="IConsoleMsgPrinter.Print(string[], ExpressionTextParserOpts, ConsoleMsgPrinterAction)" />
+    /// and its overloaded variants that accept an array of strings as the first argument.
+    /// </summary>
+    public class ConsoleStrMsgTuple : ConsoleMsgTupleCore<string>
+    {
+        /// <summary>
+        /// Creates a new console message tuple with strings as property values from the input strings.
+        /// </summary>
+        /// <param name="prefix">The prefix string that is usually needed to set the color for the actual text.</param>
+        /// <param name="text">The text to be printed.</param>
+        /// <param name="splitter">The splitter expression used to reset the color after the text has been printed.</param>
+        /// <returns>An instance of type <see cref="ConsoleStrMsgTuple" /> containing console message
+        /// printer options as string values.</returns>
+        public static ConsoleStrMsgTuple New(
+            string prefix,
+            string text,
+            string splitter)
+        {
+            var upperText = text.CapitalizeFirstLetter();
+
+            var retTuple = new ConsoleStrMsgTuple
+            {
+                L = $"{prefix}{text}{{{splitter}}}",
+                U = $"{prefix}{upperText}{{{splitter}}}"
+            };
+
+            return retTuple;
+        }
+    }
+
+    /// <summary>
     /// Stores values for expressions to be parsed from each console message string row.
     /// </summary>
     public class ConsoleMsgPrinterExprValues
@@ -120,91 +262,6 @@ namespace TrmrkMkFsDirsPair
     }
 
     /// <summary>
-    /// The interface implemented by the console message printer.
-    /// </summary>
-    public interface IConsoleMsgPrinter
-    {
-        /// <summary>
-        /// Returns the default expression values for console message printing.
-        /// </summary>
-        /// <param name="useNames">Nullable (3) state boolean value indicating what type of values to
-        /// assign to expressions. If set to <c>true</c>, it provides full enum names for console colors
-        /// and full name for new line expression. If set to <c>false</c>, it provides enum number values for
-        /// console colors and short name for new line expression. If set to <c>null</c>, it provides short names
-        /// for console colors and new line expression.</param>
-        /// <returns>An object containing the default expression values for console message printing.</returns>
-        ConsoleMsgPrinterExprValues GetDefaultExpressionValues(
-            bool? useNames = null);
-
-        /// <summary>
-        /// Parses the console color from the provided expression value.
-        /// </summary>
-        /// <param name="exprValue">The input expression value.</param>
-        /// <param name="exprValuesMap">The expression values object.</param>
-        /// <returns>An object containing the expression values.</returns>
-        ConsoleColor? ParseColor(
-            string exprValue,
-            ConsoleMsgPrinterExprValues exprValuesMap);
-
-        /// <summary>
-        /// The print method that does the job of printing the message to command prompt.
-        /// </summary>
-        /// <param name="rowsArr">The input rows.</param>
-        /// <param name="expressionTextParserOpts">An object containing the options for expression tedxt parser.</param>
-        /// <param name="useNamesForExprValues">Nullable (3) state boolean value indicating what type of values to
-        /// assign to expressions. Used by method <see cref="GetDefaultExpressionValues" />.</param>
-        /// <param name="resetConsoleAction">An optional callback that will be called instead of <see cref="Console.ResetColor" />
-        /// method when the current input argument item (row cell) is a zero-length array of type
-        /// <see cref="Nullable{ConsoleColor}" /> of <see cref="ConsoleColor" />.</param>
-        void Print(
-            string[] rowsArr,
-            ExpressionTextParserOpts expressionTextParserOpts,
-            bool? useNamesForExprValues,
-            ConsoleMsgPrinterAction resetConsoleAction = null);
-
-        /// <summary>
-        /// The print method that does the job of printing the message to command prompt.
-        /// </summary>
-        /// <param name="rowsArr">The input rows.</param>
-        /// <param name="exprValues">The expression values.</param>
-        /// <param name="expressionTextParserOpts">An object containing the options for expression tedxt parser.</param>
-        /// <param name="resetConsoleAction">An optional callback that will be called instead of <see cref="Console.ResetColor" />
-        /// method when the current input argument item (row cell) is a zero-length array of type
-        /// <see cref="Nullable{ConsoleColor}" /> of <see cref="ConsoleColor" />.</param>
-        void Print(
-            string[] rowsArr,
-            ExpressionTextParserOpts expressionTextParserOpts,
-            ConsoleMsgPrinterExprValues exprValues = null,
-            ConsoleMsgPrinterAction resetConsoleAction = null);
-
-        /// <summary>
-        /// The print method that does the job of printing the message to command prompt.
-        /// </summary>
-        /// <param name="linesArr">The lines to be printed.</param>
-        /// <param name="expressionTextParserOpts">An object containing the options for expression tedxt parser.</param>
-        /// <param name="resetConsoleAction">An optional callback that will be called instead of <see cref="Console.ResetColor" />
-        /// method when the current input argument item (row cell) is a zero-length array of type
-        /// <see cref="Nullable{ConsoleColor}" /> of <see cref="ConsoleColor" />.</param>
-        void Print(
-            string[] linesArr,
-            ExpressionTextParserOpts expressionTextParserOpts = null,
-            ConsoleMsgPrinterAction resetConsoleAction = null);
-
-        /// <summary>
-        /// The print method that does the job of printing the message to command prompt.
-        /// </summary>
-        /// <param name="msg">The input argument containing rows of arrays of objects. It largely matches
-        /// the text words to be printed, in that the rows correspond to new lines and the column array items represent
-        /// words separated by the space character, although both of these conventions can be cancelled given the appropriate
-        /// array item data type.</param>
-        /// <param name="resetConsoleAction">An optional callback that will be called instead of <see cref="Console.ResetColor" />
-        /// method when the current input argument item (row cell) is a zero-length array of type
-        /// <see cref="Nullable{ConsoleColor}" /> of <see cref="ConsoleColor" />.</param>
-        void Print(object[][] msg,
-            ConsoleMsgPrinterAction resetConsoleAction = null);
-    }
-
-    /// <summary>
     /// Helper component for printing colored messages to command prompt.
     /// </summary>
     public class ConsoleMsgPrinter : IConsoleMsgPrinter
@@ -253,7 +310,7 @@ namespace TrmrkMkFsDirsPair
         /// <summary>
         /// Returns the default expression values for console message printing.
         /// </summary>
-        /// <param name="useNames">Nullable (3) state boolean value indicating what type of values to
+        /// <param name="useNames">Nullable (3 state) boolean value indicating what type of values to
         /// assign to expressions. If set to <c>true</c>, it provides full enum names for console colors
         /// and full name for new line expression. If set to <c>false</c>, it provides enum number values for
         /// console colors and short name for new line expression. If set to <c>null</c>, it provides short names
@@ -364,7 +421,7 @@ namespace TrmrkMkFsDirsPair
         /// </summary>
         /// <param name="rowsArr">The input rows.</param>
         /// <param name="exprValues">The expression values.</param>
-        /// <param name="useNamesForExprValues">Nullable (3) state boolean value indicating what type of values to
+        /// <param name="useNamesForExprValues">Nullable (3 state) boolean value indicating what type of values to
         /// assign to expressions. Used by method <see cref="GetDefaultExpressionValues" />.</param>
         /// <param name="resetConsoleAction">An optional callback that will be called instead of <see cref="Console.ResetColor" />
         /// method when the current input argument item (row cell) is a zero-length array of type
@@ -384,7 +441,7 @@ namespace TrmrkMkFsDirsPair
         /// </summary>
         /// <param name="rowsArr">The input rows.</param>
         /// <param name="exprValues">The expression values.</param>
-        /// <param name="expressionTextParserOpts">An object containing the options for expression tedxt parser.</param>
+        /// <param name="expressionTextParserOpts">An object containing the options for expression text parser.</param>
         /// <param name="resetConsoleAction">An optional callback that will be called instead of <see cref="Console.ResetColor" />
         /// method when the current input argument item (row cell) is a zero-length array of type
         /// <see cref="Nullable{ConsoleColor}" /> of <see cref="ConsoleColor" />.</param>
