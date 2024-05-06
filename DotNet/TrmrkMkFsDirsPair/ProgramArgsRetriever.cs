@@ -552,7 +552,7 @@ namespace TrmrkMkFsDirsPair
             Func<string, string, string> optsHead = (optsStr, sffxStr) =>
             {
                 var retStr = string.Concat(
-                    $"{{{x.Blue}}}{optsStr}{{{x.DarkBlue}}}{sffxStr}");
+                    $"{{{x.DarkCyan}}}{optsStr}{{{x.DarkGray}}}{sffxStr}");
 
                 return retStr;
             };
@@ -656,7 +656,7 @@ namespace TrmrkMkFsDirsPair
                     $"{m.MarkdownFileEditor.L}{{{x.NewLine}}}{{{x.NewLine}}}"),
 
                 string.Join(" ",
-                    optsHead(config.DumpConfigFileCmdArgName, ":<?file_name>"),
+                    optsHead(config.DumpConfigFileCmdArgName + ":", "?<file_name>"),
                     $"{m.Dump.U} the current config values to a {m.File.L}{{{x.NewLine}}}{{{x.NewLine}}}"),
 
                 string.Join(" ",
