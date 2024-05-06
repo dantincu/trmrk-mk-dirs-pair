@@ -645,7 +645,7 @@ namespace TrmrkMkFsDirsPair
                     $"{m.WorkingDirectory.L} (or the {m.OneSpecified.L} with the {m.NextOption.L}){{{x.NewLine}}}{{{x.NewLine}}}"),
 
                 string.Join(" ",
-                    optsHead(config.WorkDirCmdArgName, "<file_name>"),
+                    optsHead(config.WorkDirCmdArgName, "<dir_path>"),
                     $"{m.Change.U} the {m.WorkingDirectory.L} where the {m.PairOfFolders.L} will be",
                     $"{m.Created.L} (or {m.Renamed.L}){{{x.NewLine}}}{{{x.NewLine}}}"),
 
