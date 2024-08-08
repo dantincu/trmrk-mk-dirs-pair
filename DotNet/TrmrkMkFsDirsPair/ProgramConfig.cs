@@ -23,6 +23,11 @@ namespace TrmrkMkFsDirsPair
         public string NoteFileName { get; set; }
 
         /// <summary>
+        /// Gets or sets the prefix that is prepended to the name of the markdown file created for the note item.
+        /// </summary>
+        public string NoteFileNamePfx { get; set; }
+
+        /// <summary>
         /// Gets or sets the full dir name part for the pair of folders created for the note files.
         /// </summary>
         public string NoteFilesFullDirNamePart { get; set; }

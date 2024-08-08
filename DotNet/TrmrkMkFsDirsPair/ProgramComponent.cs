@@ -153,7 +153,12 @@ namespace TrmrkMkFsDirsPair
             string newBaseFullDirName = string.Join(
                 pgArgs.JoinStr, baseDirName, pgArgs.FullDirNamePart);
 
-            string newNoteFileName = $"{pgArgs.FullDirNamePart}{config.NoteFileName}.md";
+            string newNoteFileName = string.Concat(
+                config.NoteFileNamePfx,
+                pgArgs.FullDirNamePart,
+                config.NoteFileName,
+                ".md");
+
             string newNoteFilePath = Path.Combine(workDirPath, newNoteFileName);
 
             string baseFullDirPath = Path.Combine(

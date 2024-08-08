@@ -156,7 +156,11 @@ namespace TrmrkMkFsDirsPair
 
                     if (!pgArgs.CreatePairForNoteFiles)
                     {
-                        pgArgs.MdFileName = $"{pgArgs.FullDirNamePart}{config.NoteFileName}.md";
+                        pgArgs.MdFileName = string.Concat(
+                            config.NoteFileNamePfx,
+                            pgArgs.FullDirNamePart,
+                            config.NoteFileName,
+                            ".md");
                     }
                     else if (pgArgs.OpenMdFile)
                     {

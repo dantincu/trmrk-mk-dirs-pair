@@ -1,6 +1,7 @@
 {
   "KeepFileName": ".keep",
   "NoteFileName": "[note]",
+  "NoteFileNamePfx": "0-",
   "NoteFilesFullDirNamePart": "[note-files]",
   "FullDirNameJoinStr": "-",
   "MaxDirNameLength": 100,
