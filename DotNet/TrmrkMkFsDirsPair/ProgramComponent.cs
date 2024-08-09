@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using static TrmrkMkFsDirsPair.ProgramArgs;
 
 namespace TrmrkMkFsDirsPair
 {
@@ -47,42 +48,13 @@ namespace TrmrkMkFsDirsPair
             {
                 UpdateFullDirName(pgArgs, config, workDirPath);
             }
+            else if (pgArgs.UpdateDirNameIdxes != null)
+            {
+                UpdateDirNameIdxes(pgArgs, config, workDirPath);
+            }
             else
             {
-                string shortDirPath = GetDirPathAndThrowIfDirAlreadyExists(
-                    workDirPath, pgArgs.ShortDirName);
-
-                string fullDirPath = GetDirPathAndThrowIfDirAlreadyExists(
-                    workDirPath, pgArgs.FullDirName);
-
-                Directory.CreateDirectory(shortDirPath);
-                Directory.CreateDirectory(fullDirPath);
-
-                Console.ForegroundColor = ConsoleColor.DarkCyan;
-                Console.Write("Short dir name: ");
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.Write(pgArgs.ShortDirName);
-                Console.ResetColor();
-
-                WriteKeepFile(config, pgArgs, fullDirPath);
-
-                if (!pgArgs.CreatePairForNoteFiles)
-                {
-                    string mdFilePath = Path.Combine(
-                        shortDirPath,
-                        pgArgs.MdFileName);
-
-                    string mdContents = string.Format(
-                        config.MdFileContentsTemplate,
-                        pgArgs.Title);
-
-                    File.WriteAllText(mdFilePath, mdContents);
-
-                    if (pgArgs.OpenMdFile)
-                    {
-                        UtilsH.OpenWithDefaultProgramIfNotNull(mdFilePath);
-                    }
-                }
+                CreateDirsPair(pgArgs, config, workDirPath);
             }
         }
 
@@ -94,7 +66,7 @@ namespace TrmrkMkFsDirsPair
         /// <param name="config">The config object containing the normalized config values.</param>
         /// <param name="workDirPath">The work dir path that has either been provided by the user or
         /// assigned the value of <see cref="Directory.GetCurrentDirectory()" />.</param>
-        public void UpdateFullDirName(
+        private void UpdateFullDirName(
             ProgramArgs pgArgs,
             ProgramConfig config,
             string workDirPath)
@@ -181,6 +153,193 @@ namespace TrmrkMkFsDirsPair
         }
 
         /// <summary>
+        /// Updates the folder name indexes according to the specified options.
+        /// </summary>
+        /// <param name="pgArgs">The program args parsed from the user provided arguments and normalized with the config values.</param>
+        /// <param name="config">The config object containing the normalized config values.</param>
+        /// <param name="workDirPath">The work dir path that has either been provided by the user or
+        /// assigned the value of <see cref="Directory.GetCurrentDirectory()" />.</param>
+        private void UpdateDirNameIdxes(
+            ProgramArgs pgArgs,
+            ProgramConfig config,
+            string workDirPath)
+        {
+            var entryNameRangesArr = pgArgs.UpdateDirNameIdxes;
+
+            var entryNamesArr = Directory.GetDirectories(
+                workDirPath).Select(
+                    dirPath => Path.GetFileName(
+                        dirPath)).OrderBy(
+                dirPath => dirPath).ToArray();
+
+            var entryNamesMap = entryNamesArr.Where(
+                entryName => !entryName.Contains(
+                    config.FullDirNameJoinStr)).ToDictionary(
+                entryName => entryName,
+                entryName => entryNamesArr.Where(
+                    fullDirName => fullDirName.Contains(
+                    config.FullDirNameJoinStr) && fullDirName.StartsWith(
+                        entryName)).ToArray()).Where(
+                kvp => kvp.Value.Length == 1).ToDictionary(
+                    kvp => kvp.Key, kvp => kvp.Value.Single());
+
+            var entryNamesMapMxes = entryNameRangesArr.ToDictionary(
+                entryNameRange => entryNameRange,
+                entryNameRange =>
+                {
+                    string[] matchingShortDirNamesArr;
+
+                    if (entryNameRange.Item1.IsRange)
+                    {
+                        matchingShortDirNamesArr = entryNamesMap.Keys.SkipWhile(
+                            dirName => dirName.CompareTo(
+                                entryNameRange.Item1.StartStr) < 0).TakeWhile(
+                            dirName => entryNameRange.Item1.EndStr == null || dirName.CompareTo(
+                                entryNameRange.Item1.EndStr) <= 0).ToArray();
+                    }
+                    else
+                    {
+                        matchingShortDirNamesArr = [entryNameRange.Item1.StartStr];
+                    }
+
+                    string newShortDirName = entryNameRange.Item2.StartStr;
+
+                    var dirNamesMap = matchingShortDirNamesArr.ToDictionary(
+                        matchingShortDirName => matchingShortDirName,
+                        matchingShortDirName =>
+                        {
+                            string shortDirName = matchingShortDirName;
+                            string tempShortDirName = config.FullDirNameJoinStr + shortDirName;
+
+                            var fullDirName = entryNamesMap[matchingShortDirName];
+                            var tempFullDirName = config.FullDirNameJoinStr + fullDirName;
+
+                            var fullDirNamePart = fullDirName.Substring(
+                                matchingShortDirName.Length + config.FullDirNameJoinStr.Length);
+
+                            string newFullDirName = string.Join(
+                                config.FullDirNameJoinStr,
+                                newShortDirName,
+                                fullDirNamePart);
+
+                            var retTuple = new DirNamesTuple
+                            {
+                                ShortDirName = shortDirName,
+                                TempShortDirName = tempShortDirName,
+                                NewShortDirName = newShortDirName,
+                                FullDirName = fullDirName,
+                                TempFullDirName = tempFullDirName,
+                                NewFullDirName = newFullDirName,
+                                ShortDirPath = Path.Combine(
+                                    workDirPath, shortDirName),
+                                TempShortDirPath = Path.Combine(
+                                    workDirPath, tempShortDirName),
+                                NewShortDirPath = Path.Combine(
+                                    workDirPath, newShortDirName),
+                                FullDirPath = Path.Combine(
+                                    workDirPath, fullDirName),
+                                TempFullDirPath = Path.Combine(
+                                    workDirPath, tempFullDirName),
+                                NewFullDirPath = Path.Combine(
+                                    workDirPath, newFullDirName)
+                            };
+
+                            newShortDirName = IncrementDirName(
+                                newShortDirName);
+
+                            return retTuple;
+                        });
+
+                    return dirNamesMap;
+                });
+
+            var targetedShortDirNames = entryNamesMapMxes.Values.SelectMany(
+                map => map.Keys).ToArray();
+
+            /* if (targetedShortDirNames.Length > targetedShortDirNames.Distinct().Count())
+            {
+                throw new ArgumentException(
+                    "Some of the dir name idxes overlap");
+            } */
+
+            foreach (var mxKvp in entryNamesMapMxes)
+            {
+                foreach (var kvp in mxKvp.Value)
+                {
+                    Directory.Move(
+                        kvp.Value.ShortDirPath,
+                        kvp.Value.TempShortDirPath);
+
+                    Directory.Move(
+                        kvp.Value.FullDirPath,
+                        kvp.Value.TempFullDirPath);
+                }
+            }
+
+            foreach (var mxKvp in entryNamesMapMxes)
+            {
+                foreach (var kvp in mxKvp.Value)
+                {
+                    Directory.Move(
+                        kvp.Value.TempShortDirPath,
+                        kvp.Value.NewShortDirPath);
+
+                    Directory.Move(
+                        kvp.Value.TempFullDirPath,
+                        kvp.Value.NewFullDirPath);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Creates the pair of folders according to the specified options.
+        /// </summary>
+        /// <param name="pgArgs">The program args parsed from the user provided arguments and normalized with the config values.</param>
+        /// <param name="config">The config object containing the normalized config values.</param>
+        /// <param name="workDirPath">The work dir path that has either been provided by the user or
+        /// assigned the value of <see cref="Directory.GetCurrentDirectory()" />.</param>
+        private void CreateDirsPair(
+            ProgramArgs pgArgs,
+            ProgramConfig config,
+            string workDirPath)
+        {
+            string shortDirPath = GetDirPathAndThrowIfDirAlreadyExists(
+                workDirPath, pgArgs.ShortDirName);
+
+            string fullDirPath = GetDirPathAndThrowIfDirAlreadyExists(
+                workDirPath, pgArgs.FullDirName);
+
+            Directory.CreateDirectory(shortDirPath);
+            Directory.CreateDirectory(fullDirPath);
+
+            Console.ForegroundColor = ConsoleColor.DarkCyan;
+            Console.Write("Short dir name: ");
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write(pgArgs.ShortDirName);
+            Console.ResetColor();
+
+            WriteKeepFile(config, pgArgs, fullDirPath);
+
+            if (!pgArgs.CreatePairForNoteFiles)
+            {
+                string mdFilePath = Path.Combine(
+                    shortDirPath,
+                    pgArgs.MdFileName);
+
+                string mdContents = string.Format(
+                    config.MdFileContentsTemplate,
+                    pgArgs.Title);
+
+                File.WriteAllText(mdFilePath, mdContents);
+
+                if (pgArgs.OpenMdFile)
+                {
+                    UtilsH.OpenWithDefaultProgramIfNotNull(mdFilePath);
+                }
+            }
+        }
+
+        /// <summary>
         /// Combines the provided base folder path and folder name and,
         /// if the resulted path points to an existing directory, it throws an exception.
         /// </summary>
@@ -260,6 +419,105 @@ namespace TrmrkMkFsDirsPair
                 config, pgArgs);
 
             File.WriteAllText(keepFilePath, keepFileContents);
+        }
+
+        /// <summary>
+        /// Increments the number found in a folder name.
+        /// </summary>
+        /// <param name="dirName">The existing dir name</param>
+        /// <returns>The name of a new dir name having had its number incremented by 1</returns>
+        private string IncrementDirName(
+            string dirName)
+        {
+            string digits = new string(
+                dirName.SkipWhile(
+                    c => !char.IsDigit(c)).ToArray());
+
+            int dirNamePfxLen = dirName.Length - digits.Length;
+
+            string dirNamePfx = dirName.Substring(
+                dirNamePfxLen);
+
+            int number = int.Parse(digits);
+            number++;
+
+            string newDigits = number.ToString();
+            int pfxLen = digits.Length - newDigits.Length;
+
+            if (pfxLen > 0)
+            {
+                string pfx = digits.Substring(pfxLen);
+                newDigits = pfx + newDigits;
+            }
+
+            string newDirName = dirNamePfx + newDigits;
+            return newDigits;
+        }
+
+        /// <summary>
+        /// Stores the dir names for renaming action.
+        /// </summary>
+        private class DirNamesTuple
+        {
+            /// <summary>
+            /// Gets or sets the short dir name.
+            /// </summary>
+            public string ShortDirName { get; init; }
+
+            /// <summary>
+            /// Gets or sets the temp short dir name.
+            /// </summary>
+            public string TempShortDirName { get; init; }
+
+            /// <summary>
+            /// Gets or sets the new short dir name.
+            /// </summary>
+            public string NewShortDirName { get; init; }
+
+            /// <summary>
+            /// Gets or sets the full dir name.
+            /// </summary>
+            public string FullDirName { get; init; }
+
+            /// <summary>
+            /// Gets or sets the temp full dir name.
+            /// </summary>
+            public string TempFullDirName { get; init; }
+
+            /// <summary>
+            /// Gets or sets the new full dir name.
+            /// </summary>
+            public string NewFullDirName { get; init; }
+
+            /// <summary>
+            /// Gets or sets the short dir path.
+            /// </summary>
+            public string ShortDirPath { get; init; }
+
+            /// <summary>
+            /// Gets or sets the temp short dir path.
+            /// </summary>
+            public string TempShortDirPath { get; init; }
+
+            /// <summary>
+            /// Gets or sets the new short dir path.
+            /// </summary>
+            public string NewShortDirPath { get; init; }
+
+            /// <summary>
+            /// Gets or sets the full dir path.
+            /// </summary>
+            public string FullDirPath { get; init; }
+
+            /// <summary>
+            /// Gets or sets the temp full dir path.
+            /// </summary>
+            public string TempFullDirPath { get; init; }
+
+            /// <summary>
+            /// Gets or sets the new full dir path.
+            /// </summary>
+            public string NewFullDirPath { get; init; }
         }
     }
 }

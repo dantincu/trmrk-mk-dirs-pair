@@ -67,6 +67,12 @@ namespace TrmrkMkFsDirsPair
         public string UpdateFullDirNameCmdArgName { get; set; }
 
         /// <summary>
+        /// Gets or sets the name of the program arguments flag indicating that instead of creating a pair of folders,
+        /// the idxes of folder pairs in the current folder should be updated.
+        /// </summary>
+        public string UpdateDirNameIdxesCmdArgName { get; set; }
+
+        /// <summary>
         /// Gets or sets the maximum number of characters the full dir name part should contain.
         /// </summary>
         public int MaxDirNameLength { get; set; }
@@ -92,5 +98,10 @@ namespace TrmrkMkFsDirsPair
         /// note item, the second one being the title of the note provided by the user.
         /// </summary>
         public string MdFileContentsTemplate { get; set; }
+
+        /// <summary>
+        /// Gets or sets the title macros.
+        /// </summary>
+        public Dictionary<string, string> TitleMacros { get; set; }
     }
 }

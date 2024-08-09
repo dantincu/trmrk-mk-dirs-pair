@@ -57,6 +57,18 @@ namespace TrmrkMkFsDirsPair
         }
 
         /// <summary>
+        /// Creates an array of the specified type with the specified items.
+        /// </summary>
+        /// <typeparam name="T">The type of array items</typeparam>
+        /// <param name="firstItem">The item that will sit on the first position of the array</param>
+        /// <param name="nextItemsArr">The rest of items that will fill the array</param>
+        /// <returns>An instance of type <see cref="{T}[]" /> containing the specified items.</returns>
+        public static T[] ToArr<T>(
+            this T firstItem,
+            params T[] nextItemsArr) => nextItemsArr.Prepend(
+                firstItem).ToArray();
+
+        /// <summary>
         /// Searches the provided enumerable for and returns the first item that satisfies the condition specified by the provided
         /// predicate or a default value of no suitable item is found.
         /// </summary>

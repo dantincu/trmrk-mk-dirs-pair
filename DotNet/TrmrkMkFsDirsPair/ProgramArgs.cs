@@ -108,5 +108,15 @@ namespace TrmrkMkFsDirsPair
         /// that resides in the full name folder also gets updated with the new title.
         /// </summary>
         public bool UpdateFullDirName { get; set; }
+
+        public Tuple<EntryNamesRange, EntryNamesRange>[] UpdateDirNameIdxes { get; set; }
+
+        public class EntryNamesRange
+        {
+            public string StartStr { get; set; }
+            public bool IsRange { get; set; }
+            public bool IsSwap { get; set; }
+            public string? EndStr { get; set; }
+        }
     }
 }

@@ -70,114 +70,242 @@ namespace TrmrkMkFsDirsPair
             {
                 var nextArgs = args.ToList();
 
-                var kvp = nextArgs.FirstKvp(
-                    arg => arg.StartsWith(
-                        config.WorkDirCmdArgName));
-
-                if (kvp.Key >= 0)
+                SeekFlag(nextArgs, config.WorkDirCmdArgName, (flagValue, idx) =>
                 {
-                    pgArgs.WorkDir = kvp.Value.Split(':')[2];
-                    nextArgs.RemoveAt(kvp.Key);
-                }
-                else
+                    pgArgs.WorkDir = flagValue;
+
+                    if (!Path.IsPathRooted(pgArgs.WorkDir))
+                    {
+                        pgArgs.WorkDir = Path.Combine(
+                            Directory.GetCurrentDirectory(),
+                            pgArgs.WorkDir);
+                    }
+                }, () =>
                 {
                     pgArgs.WorkDir = Directory.GetCurrentDirectory();
-                }
+                });
 
-                kvp = nextArgs.FirstKvp(
-                    arg => arg == config.DumpConfigFileCmdArgName);
-
-                if (kvp.Key >= 0)
+                SeekFlag(nextArgs, config.DumpConfigFileCmdArgName, (flagValue, idx) =>
                 {
                     pgArgs.DumpConfigFile = true;
-                    nextArgs.RemoveAt(kvp.Key);
+                    pgArgs.DumpConfigFileName = flagValue;
+                });
 
-                    pgArgs.DumpConfigFileName = kvp.Value.Split(
-                        ':', StringSplitOptions.RemoveEmptyEntries).Skip(1).FirstOrDefault()!;
-                }
-
-                kvp = nextArgs.FirstKvp(
-                    arg => arg == config.UpdateFullDirNameCmdArgName);
-
-                if (kvp.Key >= 0)
+                SeekFlag(nextArgs, config.UpdateFullDirNameCmdArgName, (flagValue, idx) =>
                 {
-                    pgArgs.UpdateFullDirName = true;
-                    nextArgs.RemoveAt(kvp.Key);
-
-                    if (nextArgs.Any())
-                    {
-                        pgArgs.Title = nextArgs[0].Trim().Nullify()!;
-                        nextArgs.RemoveAt(0);
-
-                        if (nextArgs.Any())
-                        {
-                            pgArgs.JoinStr = nextArgs[0];
-                        }
-                        else
-                        {
-                            pgArgs.JoinStr = config.FullDirNameJoinStr;
-                        }
-                    }
-                    else
-                    {
-                        pgArgs.JoinStr = config.FullDirNameJoinStr;
-                    }
-                }
-                else
+                    OnUpdateFullDirName(pgArgs, nextArgs);
+                },
+                () =>
                 {
-                    kvp = nextArgs.FirstKvp(
-                        arg => arg == config.OpenMdFileCmdArgName);
-
-                    if (kvp.Key >= 0)
+                    SeekFlag(nextArgs, config.UpdateDirNameIdxesCmdArgName, (flagValue, idx) =>
                     {
-                        pgArgs.OpenMdFile = true;
-                        nextArgs.RemoveAt(kvp.Key);
-                    }
-
-                    pgArgs.ShortDirName = nextArgs[0].Trim(
-                        ).Nullify() ?? throw new ArgumentNullException(
-                            nameof(pgArgs.ShortDirName));
-
-                    pgArgs.Title = nextArgs[1].Trim().Nullify()!;
-                    pgArgs.FullDirNamePart = pgArgs.Title;
-                    pgArgs.CreatePairForNoteFiles = pgArgs.FullDirNamePart == null;
-
-                    if (pgArgs.CreatePairForNoteFiles)
+                        OnUpdateDirNameIdxes(pgArgs, nextArgs, flagValue);
+                    },
+                    () =>
                     {
-                        pgArgs.FullDirNamePart = config.NoteFilesFullDirNamePart;
-                    }
-                    else
-                    {
-                        pgArgs.FullDirNamePart = NormalizeFullDirNamePart(
-                            pgArgs.FullDirNamePart!);
-                    }
+                        SeekFlag(nextArgs, config.OpenMdFileCmdArgName, (flagValue, idx) =>
+                        {
+                            pgArgs.OpenMdFile = true;
+                        });
 
-                    nextArgs = nextArgs[2..];
-
-                    if (!pgArgs.CreatePairForNoteFiles)
-                    {
-                        pgArgs.MdFileName = string.Concat(
-                            config.NoteFileNamePfx,
-                            pgArgs.FullDirNamePart,
-                            config.NoteFileName,
-                            ".md");
-                    }
-                    else if (pgArgs.OpenMdFile)
-                    {
-                        throw new InvalidOperationException(
-                            $"Would not create a markdown file if creating a note files dirs pair");
-                    }
-
-                    pgArgs.JoinStr = nextArgs.FirstOrDefault(
-                        ) ?? config.FullDirNameJoinStr;
-
-                    pgArgs.FullDirName = string.Join(
-                        pgArgs.JoinStr, pgArgs.ShortDirName,
-                        pgArgs.FullDirNamePart);
-                }
+                        OnCreateDirsPair(pgArgs, nextArgs);
+                    });
+                });
             }
 
             return pgArgs;
+        }
+
+        /// <summary>
+        /// Handles the command line arg that matches the update full dir name option.
+        /// </summary>
+        /// <param name="pgArgs">The program args parsed so far</param>
+        /// <param name="nextArgs">The list of command line args that have not yet been parsed</param>
+        private void OnUpdateFullDirName(
+            ProgramArgs pgArgs,
+            List<string> nextArgs)
+        {
+            pgArgs.UpdateFullDirName = true;
+
+            if (nextArgs.Any())
+            {
+                pgArgs.Title = NormalizeTitle(
+                    nextArgs[0]);
+
+                nextArgs.RemoveAt(0);
+
+                if (nextArgs.Any())
+                {
+                    pgArgs.JoinStr = nextArgs[0];
+                    nextArgs.RemoveAt(0);
+                }
+                else
+                {
+                    pgArgs.JoinStr = config.FullDirNameJoinStr;
+                }
+            }
+            else
+            {
+                pgArgs.JoinStr = config.FullDirNameJoinStr;
+            }
+        }
+
+        /// <summary>
+        /// Handles the command line arg that matches the update dir name indexes option.
+        /// </summary>
+        /// <param name="pgArgs">The program args parsed so far</param>
+        /// <param name="nextArgs">The list of command line args that have not yet been parsed</param>
+        /// <param name="flagValue">The substring of the matching command line arg that starts after the flag name prefix</param>
+        private void OnUpdateDirNameIdxes(
+            ProgramArgs pgArgs,
+            List<string> nextArgs,
+            string flagValue)
+        {
+            pgArgs.UpdateDirNameIdxes = flagValue.Split('|').Select(
+                part =>
+                {
+                    var rangesPartsArr = part.Split(
+                        '-', StringSplitOptions.RemoveEmptyEntries);
+
+                    var retArr = rangesPartsArr.Select(
+                        rangesPart =>
+                        {
+                            var subPartsArr = rangesPart.Split("..");
+
+                            var retObj = new ProgramArgs.EntryNamesRange
+                            {
+                                StartStr = subPartsArr[0],
+                                IsRange = subPartsArr.Length > 1,
+                                IsSwap = part.Contains("--")
+                            };
+
+                            if (retObj.IsRange)
+                            {
+                                retObj.EndStr = subPartsArr[1].Nullify();
+                            }
+
+                            return retObj;
+                        }).ToArray();
+
+                    if (retArr.Length != 2)
+                    {
+                        throw new ArgumentException(
+                            "Invalid value for dir name idxes map");
+                    }
+
+                    return Tuple.Create(
+                        retArr[0],
+                        retArr[1]);
+                }).ToArray();
+
+            pgArgs.UpdateDirNameIdxes = pgArgs.UpdateDirNameIdxes.SelectMany(
+                rangeObj => rangeObj.Item1.IsSwap ? rangeObj.ToArr(
+                    Tuple.Create(rangeObj.Item2,
+                        rangeObj.Item1)) : rangeObj.ToArr()).ToArray();
+        }
+
+        /// <summary>
+        /// Handles the case when the pair of folders will be created.
+        /// </summary>
+        /// <param name="pgArgs">The program args parsed so far</param>
+        /// <param name="nextArgs">The list of command line args that have not yet been parsed</param>
+        private void OnCreateDirsPair(
+            ProgramArgs pgArgs,
+            List<string> nextArgs)
+        {
+            pgArgs.ShortDirName = nextArgs[0].Trim(
+                ).Nullify() ?? throw new ArgumentNullException(
+                    nameof(pgArgs.ShortDirName));
+
+            nextArgs.RemoveAt(0);
+
+            if (nextArgs.Any())
+            {
+                pgArgs.Title = NormalizeTitle(
+                    nextArgs[0]);
+
+                nextArgs.RemoveAt(0);
+            }
+
+            pgArgs.FullDirNamePart = pgArgs.Title;
+            pgArgs.CreatePairForNoteFiles = pgArgs.FullDirNamePart == null;
+
+            if (pgArgs.CreatePairForNoteFiles)
+            {
+                pgArgs.FullDirNamePart = config.NoteFilesFullDirNamePart;
+            }
+            else
+            {
+                pgArgs.FullDirNamePart = NormalizeFullDirNamePart(
+                    pgArgs.FullDirNamePart!);
+            }
+
+            if (!pgArgs.CreatePairForNoteFiles)
+            {
+                pgArgs.MdFileName = string.Concat(
+                    config.NoteFileNamePfx,
+                    pgArgs.FullDirNamePart,
+                    config.NoteFileName,
+                    ".md");
+            }
+            else if (pgArgs.OpenMdFile)
+            {
+                throw new InvalidOperationException(
+                    $"Would not create a markdown file if creating a note files dirs pair");
+            }
+
+            pgArgs.JoinStr = nextArgs.FirstOrDefault(
+                ) ?? config.FullDirNameJoinStr;
+
+            pgArgs.FullDirName = string.Join(
+                pgArgs.JoinStr, pgArgs.ShortDirName,
+                pgArgs.FullDirNamePart);
+        }
+
+        /// <summary>
+        /// Searches the list of command line args for a one starting with the provided flag prefix.
+        /// </summary>
+        /// <param name="nextArgs">The list of command line args that have not yet been parsed</param>
+        /// <param name="flagName">The flag name</param>
+        /// <param name="flagValueCallback">The callback to be called upon finding a matching command line arg</param>
+        /// <param name="defaultCallback">The callback to be called when no matching command line arg has been found</param>
+        /// <returns>The substring of the matching command line arg that starts after the flag name prefix if
+        /// a match has been found, or the <c>null</c> value if no such match has been found.</returns>
+        private string? SeekFlag(
+            List<string> nextArgs,
+            string flagName,
+            Action<string, int> flagValueCallback,
+            Action defaultCallback = null)
+        {
+            var boolFlagNamePrefix = $":{flagName}";
+            var flagNamePrefix = $"{boolFlagNamePrefix}:";
+
+            var kvp = nextArgs.FirstKvp(
+                arg => arg == boolFlagNamePrefix || arg.StartsWith(
+                    flagNamePrefix));
+
+            string? flagValue = null;
+
+            if (kvp.Key >= 0)
+            {
+                if (kvp.Value != boolFlagNamePrefix)
+                {
+                    flagValue = kvp.Value.Substring(
+                        flagNamePrefix.Length);
+                }
+
+                nextArgs.RemoveAt(kvp.Key);
+
+                flagValueCallback(
+                    flagValue,
+                    kvp.Key);
+            }
+            else
+            {
+                defaultCallback?.Invoke();
+            }
+
+            return flagValue;
         }
 
         /// <summary>
@@ -195,10 +323,13 @@ namespace TrmrkMkFsDirsPair
         public string NormalizeFullDirNamePart(
             string fullDirNamePart)
         {
-            if (fullDirNamePart.StartsWith(":"))
+            foreach (var kvp in config.TitleMacros)
             {
-                fullDirNamePart = fullDirNamePart.Substring(1);
+                fullDirNamePart = fullDirNamePart.Replace(
+                    kvp.Key, kvp.Value);
             }
+
+            fullDirNamePart = fullDirNamePart.Replace("||", "|");
 
             fullDirNamePart = fullDirNamePart.Replace('/', '%').Split(
                 Path.GetInvalidFileNameChars(),
@@ -208,9 +339,29 @@ namespace TrmrkMkFsDirsPair
             {
                 fullDirNamePart = fullDirNamePart.Substring(
                     0, config.MaxDirNameLength);
+
+                fullDirNamePart = fullDirNamePart.TrimEnd();
+            }
+
+            if (fullDirNamePart.Last() == '.')
+            {
+                fullDirNamePart += "%";
             }
 
             return fullDirNamePart;
+        }
+
+        public string NormalizeTitle(
+            string? title)
+        {
+            title = title?.Trim().Nullify();
+
+            if (title?.StartsWith(":") ?? false)
+            {
+                title = title.Substring(1);
+            }
+
+            return title;
         }
 
         /// <summary>

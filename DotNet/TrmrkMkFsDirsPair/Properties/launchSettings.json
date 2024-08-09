@@ -2,10 +2,14 @@
   "profiles": {
     "TrmrkMkFsDirsPair": {
       "commandName": "Project",
-      // "commandLineArgs": "997 asdfasdfqwerqwe :wd:workDir"
-      "commandLineArgs": ":wd:workDir\\998 :u zxcvzxc"
-      // "commandLineArgs": ":wd:workDir\\998 :u"
+      // "commandLineArgs": "995 ::asdf:asd|T&C|fqwerqwe :wd:workDir"
+      // "commandLineArgs": ":wd:workDir\\995 :u zxcvzxc"
+      // "commandLineArgs": ":wd:workDir\\995 :u"
       // "commandLineArgs": "03 \"\""
+      // "commandLineArgs": "02"
+      // "commandLineArgs": ":wd:workDir :ux:995..998-895.."
+      // "commandLineArgs": ":wd:workDir :ux:895--896"
+      "commandLineArgs": ":wd:workDir :ux:895-894"
     }
   }
 }

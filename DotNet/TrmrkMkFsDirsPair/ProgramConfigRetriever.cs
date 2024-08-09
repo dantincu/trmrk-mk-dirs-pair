@@ -17,12 +17,12 @@ namespace TrmrkMkFsDirsPair
         /// <summary>
         /// The default value for the work dir user arguments flag.
         /// </summary>
-        const string WORK_DIR = ":wd:";
+        const string WORK_DIR = "wd";
 
         /// <summary>
         /// The default value for the work dir user arguments flag.
         /// </summary>
-        const string DUMP_CONFIG_FILE = ":dmpc";
+        const string DUMP_CONFIG_FILE = "dmpc";
 
         /// <summary>
         /// The name of the file that contains json serialized representation of the configuration values.
@@ -54,17 +54,22 @@ namespace TrmrkMkFsDirsPair
         /// The default value for the user arguments flag that indicates whether the newly created markdown file
         /// should be open in the default program after the pair of folders have been created.
         /// </summary>
-        const string OPEN_MD_FILE = ":o";
+        const string OPEN_MD_FILE = "o";
 
         /// <summary>
         /// The default value for the work dir user arguments flag.
         /// </summary>
-        const string UPDATE_FULL_DIR_NAME = ":u";
+        const string UPDATE_FULL_DIR_NAME = "u";
+
+        /// <summary>
+        /// The default value for the work dir user arguments flag.
+        /// </summary>
+        const string UPDATE_DIR_NAME_IDXES = "ux";
 
         /// <summary>
         /// The default value for the print help message user arguments flag.
         /// </summary>
-        const string PRINT_HELP_MESSAGE = ":h";
+        const string PRINT_HELP_MESSAGE = "h";
 
         /// <summary>
         /// The default value for the markdown file text contents template.
@@ -171,11 +176,13 @@ namespace TrmrkMkFsDirsPair
             config.FullDirNameJoinStr ??= JOIN_STR;
             config.OpenMdFileCmdArgName ??= OPEN_MD_FILE;
             config.UpdateFullDirNameCmdArgName ??= UPDATE_FULL_DIR_NAME;
+            config.UpdateDirNameIdxesCmdArgName ??= UPDATE_DIR_NAME_IDXES;
             config.PrintHelpMessage ??= PRINT_HELP_MESSAGE;
             config.MaxDirNameLength = config.MaxDirNameLength.Nullify() ?? MAX_DIR_NAME_LEN;
             config.KeepFileContentsTemplate ??= KEEP_FILE_CONTENTS_TEMPLATE;
             config.KeepFileContainsNoteJson ??= false;
             config.MdFileContentsTemplate ??= MD_FILE_CONTENTS_TEMPLATE;
+            config.TitleMacros ??= new Dictionary<string, string>();
         }
 
         /// <summary>
