@@ -109,13 +109,44 @@ namespace TrmrkMkFsDirsPair
         /// </summary>
         public bool UpdateFullDirName { get; set; }
 
+        /// <summary>
+        /// Gets or sets a boolean value indicating whether the sort order of pairs of folders should be reversed.
+        /// </summary>
+        public bool ReverseSortOrder { get; set; }
+
+        /// <summary>
+        /// Gets or sets a boolean value indicating whether the sort order is ascending.
+        /// </summary>
+        public bool? SortOrderIsAscending { get; set; }
+
+        /// <summary>
+        /// Gets or sets the dir name idxes to update.
+        /// </summary>
         public Tuple<EntryNamesRange, EntryNamesRange>[] UpdateDirNameIdxes { get; set; }
 
+        /// <summary>
+        /// Stores entry names range.
+        /// </summary>
         public class EntryNamesRange
         {
+            /// <summary>
+            /// Gets or sets the start string.
+            /// </summary>
             public string StartStr { get; set; }
+
+            /// <summary>
+            /// Gets or sets a boolean flag indicating whether this instance represents a range or a single item.
+            /// </summary>
             public bool IsRange { get; set; }
+
+            /// <summary>
+            /// Gets or sets a boolean flag indicating whether this instance represents a swap of dir pairs indexes.
+            /// </summary>
             public bool IsSwap { get; set; }
+
+            /// <summary>
+            /// Gets or sets the ending string.
+            /// </summary>
             public string? EndStr { get; set; }
         }
     }

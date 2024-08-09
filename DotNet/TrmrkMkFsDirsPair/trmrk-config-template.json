@@ -8,6 +8,7 @@
   "KeepFileContentsTemplate": "",
   "KeepFileContainsNoteJson": true,
   "MdFileContentsTemplate": "# {0}  \n\n",
+  "DefaultSortOrderIsAscending": false,
   "TitleMacros": {
     "|TC|": "$terms-and-concepts$"
   }

@@ -165,12 +165,27 @@ namespace TrmrkMkFsDirsPair
             string workDirPath)
         {
             var entryNameRangesArr = pgArgs.UpdateDirNameIdxes;
+            bool sortOrderIsAscending = pgArgs.SortOrderIsAscending ?? true;
 
             var entryNamesArr = Directory.GetDirectories(
                 workDirPath).Select(
                     dirPath => Path.GetFileName(
-                        dirPath)).OrderBy(
-                dirPath => dirPath).ToArray();
+                        dirPath)).With(entriesNmrbl =>
+                        {
+                            if (sortOrderIsAscending)
+                            {
+                                entriesNmrbl = entriesNmrbl.OrderBy(
+                                    dirPath => dirPath);
+                            }
+                            else
+                            {
+                                entriesNmrbl = entriesNmrbl.OrderByDescending(
+                                    dirPath => dirPath);
+                            }
+
+                            string[] entriesArr = entriesNmrbl.ToArray();
+                            return entriesArr;
+                        });
 
             var entryNamesMap = entryNamesArr.Where(
                 entryName => !entryName.Contains(
@@ -245,7 +260,8 @@ namespace TrmrkMkFsDirsPair
                             };
 
                             newShortDirName = IncrementDirName(
-                                newShortDirName);
+                                newShortDirName,
+                                sortOrderIsAscending);
 
                             return retTuple;
                         });
@@ -255,12 +271,6 @@ namespace TrmrkMkFsDirsPair
 
             var targetedShortDirNames = entryNamesMapMxes.Values.SelectMany(
                 map => map.Keys).ToArray();
-
-            /* if (targetedShortDirNames.Length > targetedShortDirNames.Distinct().Count())
-            {
-                throw new ArgumentException(
-                    "Some of the dir name idxes overlap");
-            } */
 
             foreach (var mxKvp in entryNamesMapMxes)
             {
@@ -427,7 +437,8 @@ namespace TrmrkMkFsDirsPair
         /// <param name="dirName">The existing dir name</param>
         /// <returns>The name of a new dir name having had its number incremented by 1</returns>
         private string IncrementDirName(
-            string dirName)
+            string dirName,
+            bool sortOrderisAscending)
         {
             string digits = new string(
                 dirName.SkipWhile(
@@ -439,7 +450,15 @@ namespace TrmrkMkFsDirsPair
                 dirNamePfxLen);
 
             int number = int.Parse(digits);
-            number++;
+
+            if (sortOrderisAscending)
+            {
+                number++;
+            }
+            else
+            {
+                number--;
+            }
 
             string newDigits = number.ToString();
             int pfxLen = digits.Length - newDigits.Length;

@@ -67,6 +67,11 @@ namespace TrmrkMkFsDirsPair
         const string UPDATE_DIR_NAME_IDXES = "ux";
 
         /// <summary>
+        /// The default value for the reverse sort order arguments flag.
+        /// </summary>
+        const string REVERSE_SORT_ORDER = "rs";
+
+        /// <summary>
         /// The default value for the print help message user arguments flag.
         /// </summary>
         const string PRINT_HELP_MESSAGE = "h";
@@ -177,12 +182,14 @@ namespace TrmrkMkFsDirsPair
             config.OpenMdFileCmdArgName ??= OPEN_MD_FILE;
             config.UpdateFullDirNameCmdArgName ??= UPDATE_FULL_DIR_NAME;
             config.UpdateDirNameIdxesCmdArgName ??= UPDATE_DIR_NAME_IDXES;
+            config.ReverseSortOrderCmdArgName ??= REVERSE_SORT_ORDER;
             config.PrintHelpMessage ??= PRINT_HELP_MESSAGE;
             config.MaxDirNameLength = config.MaxDirNameLength.Nullify() ?? MAX_DIR_NAME_LEN;
             config.KeepFileContentsTemplate ??= KEEP_FILE_CONTENTS_TEMPLATE;
             config.KeepFileContainsNoteJson ??= false;
             config.MdFileContentsTemplate ??= MD_FILE_CONTENTS_TEMPLATE;
             config.TitleMacros ??= new Dictionary<string, string>();
+            config.DefaultSortOrderIsAscending ??= true;
         }
 
         /// <summary>

@@ -73,6 +73,11 @@ namespace TrmrkMkFsDirsPair
         public string UpdateDirNameIdxesCmdArgName { get; set; }
 
         /// <summary>
+        /// Gets or sets the name of the program arguments flag indicating that the sort order of pairs of folders should be reversed.
+        /// </summary>
+        public string ReverseSortOrderCmdArgName { get; set; }
+
+        /// <summary>
         /// Gets or sets the maximum number of characters the full dir name part should contain.
         /// </summary>
         public int MaxDirNameLength { get; set; }
@@ -98,6 +103,11 @@ namespace TrmrkMkFsDirsPair
         /// note item, the second one being the title of the note provided by the user.
         /// </summary>
         public string MdFileContentsTemplate { get; set; }
+
+        /// <summary>
+        /// Gets or sets a boolean value indicating whether the default sort order is ascending.
+        /// </summary>
+        public bool? DefaultSortOrderIsAscending { get; set; }
 
         /// <summary>
         /// Gets or sets the title macros.

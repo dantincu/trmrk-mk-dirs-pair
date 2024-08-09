@@ -114,6 +114,18 @@ namespace TrmrkMkFsDirsPair
             return retVal;
         }
 
+        public static TOut With<TIn, TOut>(
+            this TIn inVal,
+            Func<TIn, TOut> outValFactory) => outValFactory(inVal);
+
+        public static T ActWith<T>(
+            this T val,
+            Action<T> action)
+        {
+            action(val);
+            return val;
+        }
+
         /// <summary>
         /// Returns the provided input string if it is not null or empty or the <c>null</c> value otherwise.
         /// </summary>
