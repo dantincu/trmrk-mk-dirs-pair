@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace TrmrkMkFsDirsPair
 {
@@ -464,6 +465,9 @@ namespace TrmrkMkFsDirsPair
             }
             else
             {
+                pgArgs.Title = HttpUtility.HtmlEncode(
+                    pgArgs.Title);
+
                 pgArgs.FullDirNamePart = NormalizeFullDirNamePart(
                     pgArgs.FullDirNamePart!);
             }

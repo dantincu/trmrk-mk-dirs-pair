@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Web;
 using static TrmrkMkFsDirsPair.ProgramArgs;
 
 namespace TrmrkMkFsDirsPair
@@ -83,6 +84,9 @@ namespace TrmrkMkFsDirsPair
             {
                 pgArgs.Title = File.ReadAllLines(mdFilePath).First(
                     line => line.StartsWith("# ")).Substring("# ".Length).Trim();
+
+                pgArgs.Title = HttpUtility.HtmlDecode(
+                    pgArgs.Title);
             }
             else
             {
