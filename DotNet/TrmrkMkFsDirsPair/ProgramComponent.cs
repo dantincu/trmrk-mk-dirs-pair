@@ -150,7 +150,7 @@ namespace TrmrkMkFsDirsPair
                             {
                                 if (foundTitle = line.StartsWith("# "))
                                 {
-                                    line = $"# {pgArgs.Title}  ";
+                                    line = $"# {pgArgs.MdTitleStr}  ";
                                 }
                             }
 
@@ -393,7 +393,7 @@ namespace TrmrkMkFsDirsPair
 
                 string mdContents = string.Format(
                     config.MdFileContentsTemplate,
-                    pgArgs.Title);
+                    pgArgs.MdTitleStr);
 
                 File.WriteAllText(mdFilePath, mdContents);
 
