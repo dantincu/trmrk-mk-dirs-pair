@@ -7,9 +7,11 @@
       // "commandLineArgs": ":wd:workDir\\993 :u zxcvzxc"
       // "commandLineArgs": "03 \"\""
       // "commandLineArgs": "02"
-      "commandLineArgs": ":wd:workDir :ux:895..898-795..|999-998"
+      // "commandLineArgs": ":wd:workDir :ux:895..898-795..|999-998"
       // "commandLineArgs": ":wd:workDir :ux:894-895"
       // "commandLineArgs": ":wd:f:\\D\\OneDrive\\0002\\187\\194\\199\\199\\199\\01\\_\\ :ux:999-888"
+      // "commandLineArgs": ":mkbsnb:F:\\ :nbsrc:D\\OneDrive\\0002 :nbdstn:temp\\local\\TrmrkMkFsDirsPair-test\\convert-to-basic-notes"
+      "commandLineArgs": ":mkdpnb:F:\\temp\\local\\TrmrkMkFsDirsPair-test\\ :nbsrc:convert-to-basic-notes :nbdstn:convert-to-dir-pairs-notes"
     }
   }
 }

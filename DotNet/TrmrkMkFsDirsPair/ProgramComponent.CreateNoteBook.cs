@@ -25,16 +25,20 @@ namespace TrmrkMkFsDirsPair
         {
             GetNoteBookEntries(pgArgs, config,
                 createDirPairsNoteBook,
-                out var entriesArr,
+                out var shortNameEntriesArr,
                 out var basicNoteBookNoteFilesFolder,
                 out var basicNoteItemMdFilesArr);
+
+            var shortNameDirsList = new List<string>();
 
             if (createDirPairsNoteBook)
             {
                 foreach (var entry in basicNoteItemMdFilesArr!)
                 {
-                    ConvertToDirsPairNoteItemDir(
-                        pgArgs, config, entry);
+                    AddShortDirNameToListIfReq(
+                        shortNameDirsList,
+                        ConvertToDirsPairNoteItemDir(
+                            pgArgs, config, entry));
                 }
 
                 if (basicNoteBookNoteFilesFolder != null)
@@ -45,12 +49,57 @@ namespace TrmrkMkFsDirsPair
             }
             else
             {
-                foreach (var entry in entriesArr)
+                foreach (var entry in shortNameEntriesArr)
                 {
-                    ConvertToBasicNote(
-                        pgArgs, config, entry);
+                    if (entry.IsNoteItemShortNameDir == true)
+                    {
+                        AddShortDirNameToListIfReq(
+                            shortNameDirsList,
+                            ConvertToBasicNote(
+                                pgArgs, config, entry));
+
+                        
+                    }
+                    else if (entry.IsDirPairsNoteFilesShortNameDir == true)
+                    {
+                        ConvertToBasicNoteFilesFolder(
+                            pgArgs, config, entry);
+                    }
                 }
             }
+
+            foreach (var shortNameDir in shortNameDirsList)
+            {
+                var newPgArgs = new ProgramArgs
+                {
+                    WorkDir = Path.Combine(pgArgs.WorkDir, shortNameDir),
+                    JoinStr = pgArgs.JoinStr,
+                    NoteBookDestnPath = Path.Combine(
+                        pgArgs.NoteBookDestnPath,
+                        shortNameDir),
+                    NoteBookSrcPath = Path.Combine(
+                        pgArgs.NoteBookSrcPath,
+                        shortNameDir)
+                };
+
+                CreateNoteBook(
+                    newPgArgs,
+                    config,
+                    createDirPairsNoteBook);
+            }
+        }
+
+        private string? AddShortDirNameToListIfReq(
+            List<string> shortNameDirsList,
+            string? shortDirName)
+        {
+            if (shortDirName != null)
+            {
+                shortNameDirsList.Add(
+                    shortDirName);
+            }
+
+            return shortDirName;
         }
 
         /// <summary>
@@ -59,12 +108,67 @@ namespace TrmrkMkFsDirsPair
         /// <param name="pgArgs">The provided program args.</param>
         /// <param name="config">The config obj.</param>
         /// <param name="basicNoteItem">The provided basic note item.</param>
-        private void ConvertToDirsPairNoteItemDir(
+        /// <returns>A string value containing the short dir name.</returns>
+        private string? ConvertToDirsPairNoteItemDir(
             ProgramArgs pgArgs,
             ProgramConfig config,
             NoteBookFsEntry basicNoteItem)
         {
+            string shortDirName = string.Concat(
+                config.NoteItemDirNamesPfx,
+                basicNoteItem.IdxStr);
 
+            string shortDirPath = Path.Combine(
+                pgArgs.NoteBookDestnPath,
+                shortDirName);
+
+            Directory.CreateDirectory(
+                shortDirPath);
+
+            string fullDirName = string.Join(
+                config.FullDirNameJoinStr,
+                shortDirName,
+                basicNoteItem.FullNamePart);
+
+            string fullDirPath = Path.Combine(
+                pgArgs.NoteBookDestnPath,
+                fullDirName);
+
+            Directory.CreateDirectory(
+                fullDirPath);
+
+            pgArgs.Title = GetMdTitle(
+                basicNoteItem.FullPath,
+                out string mdTitleStr);
+
+            pgArgs.MdTitleStr = mdTitleStr;
+
+            WriteKeepFile(
+                config,
+                pgArgs,
+                fullDirPath);
+
+            string mdFileName = string.Concat(
+                config.NoteFileNamePfx,
+                basicNoteItem.FullNamePart,
+                config.MdFileNameExtension);
+
+            string mdFilePath = Path.Combine(
+                shortDirPath,
+                mdFileName);
+
+            File.Copy(
+                basicNoteItem.FullPath,
+                mdFilePath);
+
+            if (basicNoteItem.MatchingShortNameEntry != null)
+            {
+                return shortDirName;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         /// <summary>
@@ -73,12 +177,36 @@ namespace TrmrkMkFsDirsPair
         /// <param name="pgArgs">The provided program args.</param>
         /// <param name="config">The config obj.</param>
         /// <param name="noteFilesDir">The note files pair of folders.</param>
-        private void ConvertToDirsPairNoteFilesDir(
+        /// <returns>A string value containing the short dir name.</returns>
+        private string ConvertToDirsPairNoteFilesDir(
             ProgramArgs pgArgs,
             ProgramConfig config,
             NoteBookFsEntry noteFilesDir)
         {
+            string shortDirName = string.Concat(
+                config.NoteInternalDirNamesPfx,
+                config.DefaultNoteFilesShortDirNameIdxStr);
 
+            string shortDirPath = Path.Combine(
+                pgArgs.NoteBookDestnPath,
+                shortDirName);
+
+            CreateDirsPair(new ProgramArgs
+            {
+                CreatePairForNoteFiles = true,
+                ShortDirName = shortDirName,
+                FullDirNamePart = config.NoteFilesFullDirNamePart,
+                FullDirName = string.Join(
+                pgArgs.JoinStr,
+                shortDirName,
+                config.NoteFilesFullDirNamePart)
+            }, config, pgArgs.NoteBookDestnPath);
+
+            UtilsH.CopyDirectory(
+                noteFilesDir.FullPath,
+                shortDirPath);
+
+            return shortDirName;
         }
 
         /// <summary>
@@ -87,12 +215,85 @@ namespace TrmrkMkFsDirsPair
         /// <param name="pgArgs">The provided program args.</param>
         /// <param name="config">The config obj.</param>
         /// <param name="noteItemDir">The note item pair of folders.</param>
-        private void ConvertToBasicNote(
+        /// <returns>A string value containing the short dir name.</returns>
+        private string ConvertToBasicNote(
             ProgramArgs pgArgs,
             ProgramConfig config,
             NoteBookFsEntry noteItemDir)
         {
+            string shortDirName = string.Concat(
+                config.NoteItemDirNamesPfx,
+                noteItemDir.IdxStr);
 
+            string shortDirPath = Path.Combine(
+                pgArgs.NoteBookDestnPath,
+                shortDirName);
+
+            string srcShortDirPath = Path.Combine(
+                pgArgs.NoteBookSrcPath,
+                shortDirName);
+
+            var shortDirFsEntriesArr = UtilsH.GetFileSystemEntries(
+                srcShortDirPath);
+
+            bool hasContent = shortDirFsEntriesArr.Length > 1;
+
+            if (hasContent)
+            {
+                Directory.CreateDirectory(
+                    shortDirPath);
+            }
+
+            var srcMdFileEntry = shortDirFsEntriesArr.Single(
+                file => EntryNameMatchesDirPairsNoteItemMdFile(
+                    config, file, out _));
+
+            string fullMdFileName = string.Join(
+                config.FullDirNameJoinStr,
+                shortDirName,
+                noteItemDir.MatchingFullNameEntry.FullNamePart) + config.MdFileNameExtension;
+
+            string fullMdFilePath = Path.Combine(
+                pgArgs.NoteBookDestnPath,
+                fullMdFileName);
+
+            File.Copy(
+                srcMdFileEntry.FullPath,
+                fullMdFilePath);
+
+            if (hasContent)
+            {
+                return shortDirName;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Converts the provided dirs pair note item to a basic note item.
+        /// </summary>
+        /// <param name="pgArgs">The provided program args.</param>
+        /// <param name="config">The config obj.</param>
+        /// <param name="noteFilesDir">The note item pair of folders.</param>
+        /// <returns>A string value containing the short dir name.</returns>
+        private string ConvertToBasicNoteFilesFolder(
+            ProgramArgs pgArgs,
+            ProgramConfig config,
+            NoteBookFsEntry noteFilesDir)
+        {
+            string shortDirName = config.BasicNoteBookNoteFilesDirName;
+
+            string shortDirPath = Path.Combine(
+                pgArgs.NoteBookDestnPath,
+                shortDirName);
+
+            UtilsH.CopyDirectory(
+                noteFilesDir.FullPath,
+                shortDirPath);
+
+            return shortDirName;
         }
 
         /// <summary>
@@ -101,35 +302,50 @@ namespace TrmrkMkFsDirsPair
         /// <param name="pgArgs">The provided program args.</param>
         /// <param name="config">The config obj.</param>
         /// <param name="createDirPairsNoteBook">A boolean value indicating whether to create a dirs pair note book or a basic note book.</param>
-        /// <param name="entriesArr">The array of entries in the source location</param>
+        /// <param name="shortNameEntriesArr">The array of entries in the source location</param>
         /// <param name="basicNoteBookNoteFilesFolder">The basic note book note files folder</param>
         /// <param name="basicNoteItemMdFilesArr">The array of basic note item markdown files</param>
         private void GetNoteBookEntries(
             ProgramArgs pgArgs,
             ProgramConfig config,
             bool createDirPairsNoteBook,
-            out NoteBookFsEntry[] entriesArr,
+            out NoteBookFsEntry[] shortNameEntriesArr,
             out NoteBookFsEntry? basicNoteBookNoteFilesFolder,
             out NoteBookFsEntry[]? basicNoteItemMdFilesArr)
         {
+            Console.ForegroundColor = ConsoleColor.DarkCyan;
+            Console.Write("NoteBookSrcPath: ");
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine(pgArgs.NoteBookSrcPath);
+
+            Console.ForegroundColor = ConsoleColor.DarkCyan;
+            Console.Write("NoteBookDestnPath: ");
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine(pgArgs.NoteBookDestnPath);
+
+            Console.ResetColor();
+            Console.WriteLine();
+
             ValidateNoteBookArgs(
                 pgArgs,
                 config,
                 createDirPairsNoteBook);
 
-            var entriesArray = UtilsH.GetFileSystemEntries(
-                    pgArgs.WorkDir).Select(
+            var allEntriesArr = UtilsH.GetFileSystemEntries(
+                    pgArgs.NoteBookSrcPath).Select(
                 fsEntry => GetNoteBookFsEntry(
-                    config, fsEntry, createDirPairsNoteBook)).ToArray();
+                    config, fsEntry, createDirPairsNoteBook)).Where(
+                fsEntry => fsEntry != null).ToArray();
 
-            entriesArray = entriesArray.Where(
-                entry => entry.IsNoteItemShortNameDir == true).Select(
+            var entriesArr = allEntriesArr.Where(
+                entry => entry.IsNoteItemShortNameDir == true || entry.IsDirPairsNoteFilesShortNameDir == true).Select(
                 shortNameEntry => new NoteBookFsEntry(shortNameEntry)
                 {
-                    MatchingFullNameEntry = entriesArray.Where(
+                    MatchingFullNameEntry = allEntriesArr.Where(
                         candidate => EntriesMatch(
                             shortNameEntry,
-                            candidate)).With(nmrbl =>
+                            candidate,
+                            createDirPairsNoteBook)).With(nmrbl =>
                         {
                             var count = nmrbl.Count();
 
@@ -143,20 +359,20 @@ namespace TrmrkMkFsDirsPair
                         })
                 }).ToArray();
 
-            entriesArr = entriesArray;
+            shortNameEntriesArr = entriesArr;
 
-            basicNoteBookNoteFilesFolder = entriesArray.SingleOrDefault(
+            basicNoteBookNoteFilesFolder = allEntriesArr.SingleOrDefault(
                 entry => entry.IsBasicNoteFilesFolder == true);
 
             basicNoteItemMdFilesArr = createDirPairsNoteBook switch
             {
-                true => entriesArray.Where(
-                    entry => entry.IsNoteItemShortNameDir != true && entry.IsFolder != true && entriesArray.All(
-                        shortNameDir => shortNameDir.MatchingFullNameEntry.With(
-                            matchingFullNameEntry => matchingFullNameEntry.IsFolder == true || matchingFullNameEntry.FullNamePart != entry.FullNamePart))).ToArray(
-                    ).ActWith(noteItemsArr => entriesArray.All(
-                        shortNameDir => noteItemsArr.Single(
-                            noteItem => noteItem.IdxStr == shortNameDir.IdxStr) != null)),
+                true => allEntriesArr.Where(entry => entry.IsBasicNoteItemFullNameMdFile == true).With(
+                    noteItemsNmrbl => noteItemsNmrbl.Select(
+                        noteItem => new NoteBookFsEntry(noteItem)
+                        {
+                            MatchingShortNameEntry = entriesArr.SingleOrDefault(
+                                shortNameDir => shortNameDir.MatchingFullNameEntry == noteItem)
+                        })).ToArray(),
                 false => null
             };
         }
@@ -169,11 +385,27 @@ namespace TrmrkMkFsDirsPair
         /// <returns></returns>
         private bool EntriesMatch(
             NoteBookFsEntry shortNameEntry,
-            NoteBookFsEntry candidate)
+            NoteBookFsEntry candidate,
+            bool createDirPairsNoteBook)
         {
-            bool entriesMatch = candidate.IsNoteItemShortNameDir != true && candidate.IsDirPairsNoteFilesShortNameDir != true &&
+            /* bool entriesMatch = candidate.IsNoteItemShortNameDir != true && candidate.IsDirPairsNoteFilesShortNameDir != true &&
                 candidate.IdxStr == shortNameEntry.IdxStr &&
-                candidate.IsDirPairsNoteItemFullNameDir == shortNameEntry.IsNoteItemShortNameDir && candidate.IsDirPairsNoteFilesFullNameDir == shortNameEntry.IsDirPairsNoteFilesShortNameDir;
+                candidate.IsDirPairsNoteItemFullNameDir == shortNameEntry.IsNoteItemShortNameDir && candidate.IsDirPairsNoteFilesFullNameDir == shortNameEntry.IsDirPairsNoteFilesShortNameDir; */
+
+            bool entriesMatch = candidate.IsNoteItemShortNameDir != true && candidate.IsDirPairsNoteFilesShortNameDir != true &&
+                candidate.IdxStr == shortNameEntry.IdxStr;
+
+            if (entriesMatch)
+            {
+                if (createDirPairsNoteBook)
+                {
+                    entriesMatch = candidate.IsBasicNoteItemFullNameMdFile == true;
+                }
+                else
+                {
+                    entriesMatch = candidate.IsDirPairsNoteItemFullNameDir == shortNameEntry.IsNoteItemShortNameDir && candidate.IsDirPairsNoteFilesFullNameDir == shortNameEntry.IsDirPairsNoteFilesShortNameDir;
+                }
+            }
 
             return entriesMatch;
         }
@@ -200,10 +432,9 @@ namespace TrmrkMkFsDirsPair
             var fullDirNamePart = GetEntryNameType(
                 config, fsEntry,
                 out var entryNameIdxStr,
-                out var isNoteItemEntryName,
-                out var isDirPairsNoteItemMdFile);
+                out var isNoteItemEntryName);
 
-            if (isNoteItemEntryName.HasValue || isDirPairsNoteItemMdFile.HasValue || isBasicNoteBookNoteFilesFolder)
+            if (isNoteItemEntryName.HasValue || isBasicNoteBookNoteFilesFolder)
             {
                 bool isNoteFullNameEntry = fullDirNamePart != null && entryNameIdxStr != null;
                 bool isNoteShortNameDir = fullDirNamePart == null && entryNameIdxStr != null;
@@ -233,7 +464,6 @@ namespace TrmrkMkFsDirsPair
                     IsFolder = isFolder,
                     IsNoteItemShortNameDir = isNoteShortNameDir && isNoteItemEntryName == true,
                     IsDirPairsNoteFilesShortNameDir = isNoteShortNameDir && isNoteItemEntryName == false,
-                    IsDirPairsNoteItemMdFile = isDirPairsNoteItemMdFile,
                     IsDirPairsNoteItemFullNameDir = isFolder && isNoteFullNameEntry && isNoteItemEntryName == true,
                     IsDirPairsNoteFilesFullNameDir = isFolder && isNoteFullNameEntry && isNoteItemEntryName == false,
                     IsBasicNoteItemFullNameMdFile = !isFolder && isNoteFullNameEntry,
@@ -242,65 +472,8 @@ namespace TrmrkMkFsDirsPair
                     MdTitleStr = mdTitleStr,
                 };
             }
-            else
-            {
-                OnInvalidNoteBookFsEntry(noteFsEntry,
-                    "Entry name does not match a note book item: {0}");
-            }
 
-            if (createDirPairsNoteBook)
-            {
-                if (noteFsEntry.IsDirPairsNoteItemFullNameDir == true)
-                {
-                    OnInvalidNoteBookFsEntry(noteFsEntry,
-                        "Not expecting a dir pairs note item full name dir in the source location when creating a dir pairs note book: {0}");
-                }
-                else if (noteFsEntry.IsDirPairsNoteItemMdFile == true)
-                {
-                    OnInvalidNoteBookFsEntry(noteFsEntry,
-                        "Not expecting a dir pairs note item md file in the source location when creating a dir pairs note book: {0}");
-                }
-                else if (noteFsEntry.IsNoteItemShortNameDir.ToArr(
-                    noteFsEntry.IsBasicNoteFilesFolder,
-                    noteFsEntry.IsBasicNoteItemFullNameMdFile).All(
-                    nllblVal => nllblVal != true))
-                {
-                    OnInvalidNoteBookFsEntry(noteFsEntry, string.Join(Environment.NewLine,
-                        "When creating a dir pairs note book, an entry in the source location should be either",
-                        "a short name dir, a basic note files folder or a basic note item full name md file: {0}"));
-                }
-            }
-            else
-            {
-                if (isFolder)
-                {
-                    if (noteFsEntry.IsNoteItemShortNameDir.ToArr(
-                        noteFsEntry.IsBasicNoteFilesFolder,
-                        noteFsEntry.IsBasicNoteItemFullNameMdFile).Any(
-                        nllblVal => nllblVal == true))
-                    {
-                        OnInvalidNoteBookFsEntry(noteFsEntry, string.Join(Environment.NewLine,
-                            "When creating a basic note book, an entry in the source location should be neither",
-                            "a short name dir, nor a basic note files folder, nor a basic note item full name md file: {0}"));
-                    }
-                    else if (noteFsEntry.IsDirPairsNoteItemFullNameDir.ToArr(
-                        noteFsEntry.IsDirPairsNoteItemMdFile).All(
-                            nllblVal => nllblVal != true))
-                    {
-                        OnInvalidNoteBookFsEntry(noteFsEntry, string.Join(Environment.NewLine,
-                            "When creating a basic note book, an entry in the source location should be either",
-                            "a short name dir or a full name dir: {0}"));
-                    }
-                }
-                else
-                {
-                    OnInvalidNoteBookFsEntry(noteFsEntry,
-                        "Expecting only folders in the source location when creating a basic note book: {0}");
-                }
-            }
-
-            return noteFsEntry ?? throw new InvalidOperationException(
-                "Something went wrong...");
+            return noteFsEntry;
         }
 
         private void OnInvalidNoteBookFsEntry(
@@ -334,41 +507,33 @@ namespace TrmrkMkFsDirsPair
             ProgramConfig config,
             FsEntry fsEntry,
             out string? entryNameIdxStr,
-            out bool? isNoteItemEntryName,
-            out bool? isDirPairsNoteItemMdFile)
+            out bool? isNoteItemEntryName)
         {
             string? fullNamePart;
-            isDirPairsNoteItemMdFile = null;
 
             if (EntryNameMatches(
                 config,
                 fsEntry,
-                config.NoteItemDirNamesPfx,
+                config.NoteInternalDirNamesPfx,
                 out entryNameIdxStr,
                 out fullNamePart))
             {
-                isNoteItemEntryName = true;
+                isNoteItemEntryName = false;
             }
             else
             {
                 if (EntryNameMatches(
                     config,
                     fsEntry,
-                    config.NoteInternalDirNamesPfx,
+                    config.NoteItemDirNamesPfx,
                     out entryNameIdxStr,
                     out fullNamePart))
                 {
-                    isNoteItemEntryName = false;
+                    isNoteItemEntryName = true;
                 }
                 else
                 {
                     isNoteItemEntryName = null;
-
-                    if (EntryNameMatchesDirPairsNoteItemMdFile(
-                        config, fsEntry, out fullNamePart))
-                    {
-                        isDirPairsNoteItemMdFile = true;
-                    }
                 }
             }
 
@@ -484,10 +649,10 @@ namespace TrmrkMkFsDirsPair
                 throw new ArgumentException(
                     $"The source path cannot be the same with the destination path: {pgArgs.NoteBookSrcPath}");
             }
-            else if (Directory.EnumerateFileSystemEntries(pgArgs.NoteBookDestnPath).Any())
+            else if (Directory.EnumerateFileSystemEntries(pgArgs.NoteBookDestnPath).Count() > 1)
             {
                 throw new InvalidOperationException(
-                    $"The destination directory must be empty: {pgArgs.NoteBookDestnPath}");
+                    $"The destination directory must be not contain more than 1 entry: {pgArgs.NoteBookDestnPath}");
             }
         }
     }

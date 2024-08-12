@@ -376,5 +376,40 @@ namespace TrmrkMkFsDirsPair
 
             fsEntriesList.AddRange(fsEntriesArr);
         }
+
+        /// <summary>
+        /// Copies the contents of a source directory to a destination directory recursively to any depth.
+        /// </summary>
+        /// <param name="srcDirPath">The source directory path.</param>
+        /// <param name="destnDirPath">The destination directory path.</param>
+        public static void CopyDirectory(
+            string srcDirPath,
+            string destnDirPath)
+        {
+            Directory.CreateDirectory(
+                destnDirPath);
+
+            foreach (var srcFilePath in Directory.GetFiles(srcDirPath))
+            {
+                string fileName = Path.GetFileName(srcFilePath);
+
+                string destnFilePath = Path.Combine(
+                    destnDirPath,
+                    fileName);
+
+                File.Copy(srcFilePath, destnFilePath);
+            }
+
+            foreach (var srcSubDirPath in Directory.GetDirectories(srcDirPath))
+            {
+                string subDirName = Path.GetFileName(srcSubDirPath);
+
+                string destnSubDirPath = Path.Combine(
+                    destnDirPath,
+                    subDirName);
+
+                CopyDirectory(srcSubDirPath, destnSubDirPath);
+            }
+        }
     }
 }

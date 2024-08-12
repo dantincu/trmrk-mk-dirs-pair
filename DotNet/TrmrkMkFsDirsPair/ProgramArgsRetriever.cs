@@ -358,13 +358,22 @@ namespace TrmrkMkFsDirsPair
             consoleMsgPrinter.Print(linesArr, null, x);
         }
 
+        /// <summary>
+        /// Handles a create note book command line option.
+        /// </summary>
+        /// <param name="pgArgs">The program args parsed so far</param>
+        /// <param name="nextArgs">The list of remaining command line args</param>
+        /// <param name="flagValue">The current command line option value</param>
+        /// <param name="isDirsPairNoteBook">Boolean value indicating whether a dirs pair note book will be created</param>
+        /// <returns>The normalized common path shared by source and destination locations.</returns>
         private string OnCreateNoteBook(
             ProgramArgs pgArgs,
             List<string> nextArgs,
             string flagValue,
             bool isDirsPairNoteBook)
         {
-            string commonDirPath = flagValue.NormalizePath();
+            string commonDirPath = flagValue.NormalizePath(
+                pgArgs.WorkDir);
 
             SeekFlag(nextArgs, config.NoteBookSrcPathCmdArgName, (flagValue, idx) =>
             {

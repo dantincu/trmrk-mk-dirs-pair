@@ -380,7 +380,7 @@ namespace TrmrkMkFsDirsPair
             Console.ForegroundColor = ConsoleColor.DarkCyan;
             Console.Write("Short dir name: ");
             Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.Write(pgArgs.ShortDirName);
+            Console.WriteLine(pgArgs.ShortDirName);
             Console.ResetColor();
 
             WriteKeepFile(config, pgArgs, fullDirPath);

@@ -97,11 +97,16 @@ namespace TrmrkMkFsDirsPair
                 IdxStr = src.IdxStr;
                 FullNamePart = src.FullNamePart;
                 IsFolder = src.IsFolder;
-                IsBasicNoteItemFullNameMdFile = src.IsBasicNoteItemFullNameMdFile;
                 IsNoteItemShortNameDir = src.IsNoteItemShortNameDir;
+                IsBasicNoteItemFullNameMdFile = src.IsBasicNoteItemFullNameMdFile;
                 IsBasicNoteFilesFolder = src.IsBasicNoteFilesFolder;
                 IsDirPairsNoteItemFullNameDir = src.IsDirPairsNoteItemFullNameDir;
+                IsDirPairsNoteFilesShortNameDir = src.IsDirPairsNoteFilesShortNameDir;
+                IsDirPairsNoteFilesFullNameDir = src.IsDirPairsNoteFilesFullNameDir;
                 MatchingFullNameEntry = src.MatchingFullNameEntry;
+                MatchingShortNameEntry = src.MatchingShortNameEntry;
+                NoteTitle = src.NoteTitle;
+                MdTitleStr = src.MdTitleStr;
             }
 
             /// <summary>
@@ -145,11 +150,6 @@ namespace TrmrkMkFsDirsPair
             public bool? IsBasicNoteFilesFolder { get; init; }
 
             /// <summary>
-            /// Gets or sets a boolean flag indicating whether this entry is a dir pairs note item markdown file.
-            /// </summary>
-            public bool? IsDirPairsNoteItemMdFile { get; init; }
-
-            /// <summary>
             /// Gets or sets a boolean flag indicating whether this entry is a dir pairs note item full name folder.
             /// </summary>
             public bool? IsDirPairsNoteItemFullNameDir { get; init; }
@@ -168,6 +168,11 @@ namespace TrmrkMkFsDirsPair
             /// Gets or sets the matching full name entry.
             /// </summary>
             public NoteBookFsEntry MatchingFullNameEntry { get; init; }
+
+            /// <summary>
+            /// Gets or sets the matching short name entry.
+            /// </summary>
+            public NoteBookFsEntry? MatchingShortNameEntry { get; init; }
 
             /// <summary>
             /// Gets or sets the note title.

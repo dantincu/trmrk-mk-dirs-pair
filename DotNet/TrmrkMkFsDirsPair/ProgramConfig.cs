@@ -108,6 +108,11 @@ namespace TrmrkMkFsDirsPair
         public string NoteInternalDirNamesPfx { get; set; }
 
         /// <summary>
+        /// Gets or sets the default note files short dir name index string.
+        /// </summary>
+        public string DefaultNoteFilesShortDirNameIdxStr { get; set; }
+
+        /// <summary>
         /// Gets or sets the basic note book note files directory name.
         /// </summary>
         public string BasicNoteBookNoteFilesDirName { get; set; }

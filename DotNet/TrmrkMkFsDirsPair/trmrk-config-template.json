@@ -8,6 +8,7 @@
   "MaxDirNameLength": 100,
   "NoteItemDirNamesPfx": null,
   "NoteInternalDirNamesPfx": "0",
+  "DefaultNoteFilesShortDirNameIdxStr": "1",
   "KeepFileContentsTemplate": "",
   "KeepFileContainsNoteJson": true,
   "MdFileContentsTemplate": "# {0}  \n\n",
