@@ -12,6 +12,39 @@ namespace TrmrkMkFsDirsPair
     internal class ProgramArgs
     {
         /// <summary>
+        /// The default constructor used to create a new instance from scratch.
+        /// </summary>
+        public ProgramArgs()
+        {
+        }
+
+        /// <summary>
+        /// The cloning constructor used to create a new instance starting with cloning an existing instance.
+        /// </summary>
+        /// <param name="src">The source instance to clone</param>
+        public ProgramArgs(ProgramArgs src)
+        {
+            WorkDir = src.WorkDir;
+            ShortDirName = src.ShortDirName;
+            Title = src.Title;
+            FullDirNamePart = src.FullDirNamePart;
+            JoinStr = src.JoinStr;
+            FullDirName = src.FullDirName;
+            MdFileName = src.MdFileName;
+            CreatePairForNoteFiles = src.CreatePairForNoteFiles;
+            OpenMdFile = src.OpenMdFile;
+            PrintHelp = src.PrintHelp;
+            DumpConfigFile = src.DumpConfigFile;
+            DumpConfigFileName = src.DumpConfigFileName;
+            UpdateFullDirName = src.UpdateFullDirName;
+            UpdateDirNameIdxes = src.UpdateDirNameIdxes;
+            CreateDirsPairNoteBookPath = src.CreateDirsPairNoteBookPath;
+            CreateBasicNoteBookPath = src.CreateBasicNoteBookPath;
+            NoteBookSrcPath = src.NoteBookSrcPath;
+            NoteBookDestnPath = src.NoteBookDestnPath;
+        }
+
+        /// <summary>
         /// Gets or sets the work dir path, where the dirs pair will be created or be renamed, if the case
         /// (optional, as it's assigned the return value of <c>Directory.GetCurrentDirectory()</c> by default).
         /// It can be provided by the user by specifying the flag according to <see cref="ProgramConfig.WorkDirCmdArgName" />
@@ -31,6 +64,11 @@ namespace TrmrkMkFsDirsPair
         /// This is mandatory and must be the second argument when creating a new note dir.
         /// </summary>
         public string Title { get; set; }
+
+        /// <summary>
+        /// Gets or sets the note title string that appears in the markdown file.
+        /// </summary>
+        public string MdTitleStr { get; set; }
 
         /// <summary>
         /// Gets or sets the part of the full folder name that is appended after the short folder name and the join str.
@@ -110,19 +148,29 @@ namespace TrmrkMkFsDirsPair
         public bool UpdateFullDirName { get; set; }
 
         /// <summary>
-        /// Gets or sets a boolean value indicating whether the sort order of pairs of folders should be reversed.
-        /// </summary>
-        public bool ReverseSortOrder { get; set; }
-
-        /// <summary>
-        /// Gets or sets a boolean value indicating whether the sort order is ascending.
-        /// </summary>
-        public bool? SortOrderIsAscending { get; set; }
-
-        /// <summary>
         /// Gets or sets the dir name idxes to update.
         /// </summary>
         public Tuple<EntryNamesRange, EntryNamesRange>[] UpdateDirNameIdxes { get; set; }
+
+        /// <summary>
+        /// Gets or sets the common root path used to resolve both the source and destination paths for creating folders pair a note book.
+        /// </summary>
+        public string? CreateDirsPairNoteBookPath { get; set; }
+
+        /// <summary>
+        /// Gets or sets the common root path used to resolve both the source and destination paths for creating basic a note book.
+        /// </summary>
+        public string? CreateBasicNoteBookPath { get; set; }
+
+        /// <summary>
+        /// Gets or sets the source path used to create a note book.
+        /// </summary>
+        public string NoteBookSrcPath { get; set; }
+
+        /// <summary>
+        /// Gets or sets the destination path used to create a note book.
+        /// </summary>
+        public string NoteBookDestnPath { get; set; }
 
         /// <summary>
         /// Stores entry names range.

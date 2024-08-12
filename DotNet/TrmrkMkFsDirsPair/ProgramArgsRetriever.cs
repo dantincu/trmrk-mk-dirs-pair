@@ -44,7 +44,7 @@ namespace TrmrkMkFsDirsPair
             this.cfgRetriever = cfgRetriever ?? throw new ArgumentNullException(
                 nameof(cfgRetriever));
 
-            config = cfgRetriever.Config;
+            config = cfgRetriever.Config.Value;
         }
 
         /// <summary>
@@ -90,36 +90,44 @@ namespace TrmrkMkFsDirsPair
                 {
                     pgArgs.DumpConfigFile = true;
                     pgArgs.DumpConfigFileName = flagValue;
-                });
-
-                SeekFlag(nextArgs, config.ReverseSortOrderCmdArgName, (flagValue, idx) =>
-                {
-                    pgArgs.ReverseSortOrder = true;
-                    pgArgs.SortOrderIsAscending = !config.DefaultSortOrderIsAscending!.Value;
                 },
                 () =>
                 {
-                    pgArgs.SortOrderIsAscending = config.DefaultSortOrderIsAscending!.Value;
-                });
-
-                SeekFlag(nextArgs, config.UpdateFullDirNameCmdArgName, (flagValue, idx) =>
-                {
-                    OnUpdateFullDirName(pgArgs, nextArgs);
-                },
-                () =>
-                {
-                    SeekFlag(nextArgs, config.UpdateDirNameIdxesCmdArgName, (flagValue, idx) =>
+                    SeekFlag(nextArgs, config.UpdateFullDirNameCmdArgName, (flagValue, idx) =>
                     {
-                        OnUpdateDirNameIdxes(pgArgs, nextArgs, flagValue);
+                        OnUpdateFullDirName(pgArgs, nextArgs);
                     },
                     () =>
                     {
-                        SeekFlag(nextArgs, config.OpenMdFileCmdArgName, (flagValue, idx) =>
+                        SeekFlag(nextArgs, config.UpdateDirNameIdxesCmdArgName, (flagValue, idx) =>
                         {
-                            pgArgs.OpenMdFile = true;
-                        });
+                            OnUpdateDirNameIdxes(pgArgs, nextArgs, flagValue);
+                        },
+                        () =>
+                        {
+                            SeekFlag(nextArgs, config.CreateDirsPairNoteBookCmdArgName, (flagValue, idx) =>
+                            {
+                                pgArgs.CreateDirsPairNoteBookPath = OnCreateNoteBook(
+                                    pgArgs, nextArgs, flagValue, true);
+                            },
+                            () =>
+                            {
+                                SeekFlag(nextArgs, config.CreateBasicNoteBookCmdArgName, (flagValue, idx) =>
+                                {
+                                    pgArgs.CreateBasicNoteBookPath = OnCreateNoteBook(
+                                        pgArgs, nextArgs, flagValue, false);
+                                },
+                                () =>
+                                {
+                                    SeekFlag(nextArgs, config.OpenMdFileCmdArgName, (flagValue, idx) =>
+                                    {
+                                        pgArgs.OpenMdFile = true;
+                                    });
 
-                        OnCreateDirsPair(pgArgs, nextArgs);
+                                    OnCreateDirsPair(pgArgs, nextArgs);
+                                });
+                            });
+                        });
                     });
                 });
             }
@@ -162,6 +170,11 @@ namespace TrmrkMkFsDirsPair
             return fullDirNamePart;
         }
 
+        /// <summary>
+        /// Normalizes the provided title.
+        /// </summary>
+        /// <param name="title">The provided title</param>
+        /// <returns>The normalized title</returns>
         public string NormalizeTitle(
             string? title)
         {
@@ -345,6 +358,29 @@ namespace TrmrkMkFsDirsPair
             consoleMsgPrinter.Print(linesArr, null, x);
         }
 
+        private string OnCreateNoteBook(
+            ProgramArgs pgArgs,
+            List<string> nextArgs,
+            string flagValue,
+            bool isDirsPairNoteBook)
+        {
+            string commonDirPath = flagValue.NormalizePath();
+
+            SeekFlag(nextArgs, config.NoteBookSrcPathCmdArgName, (flagValue, idx) =>
+            {
+                pgArgs.NoteBookSrcPath = flagValue.NormalizePath(
+                    commonDirPath);
+            });
+
+            SeekFlag(nextArgs, config.NoteBookDestnPathCmdArgName, (flagValue, idx) =>
+            {
+                pgArgs.NoteBookDestnPath = flagValue.NormalizePath(
+                    commonDirPath);
+            });
+
+            return commonDirPath;
+        }
+
         /// <summary>
         /// Handles the command line arg that matches the update full dir name option.
         /// </summary>
@@ -360,6 +396,9 @@ namespace TrmrkMkFsDirsPair
             {
                 pgArgs.Title = NormalizeTitle(
                     nextArgs[0]);
+
+                pgArgs.MdTitleStr = HttpUtility.HtmlEncode(
+                    pgArgs.Title);
 
                 nextArgs.RemoveAt(0);
 
@@ -453,6 +492,9 @@ namespace TrmrkMkFsDirsPair
                 pgArgs.Title = NormalizeTitle(
                     nextArgs[0]);
 
+                pgArgs.MdTitleStr = HttpUtility.HtmlEncode(
+                    pgArgs.Title);
+
                 nextArgs.RemoveAt(0);
             }
 
@@ -465,9 +507,6 @@ namespace TrmrkMkFsDirsPair
             }
             else
             {
-                pgArgs.Title = HttpUtility.HtmlEncode(
-                    pgArgs.Title);
-
                 pgArgs.FullDirNamePart = NormalizeFullDirNamePart(
                     pgArgs.FullDirNamePart!);
             }
@@ -478,7 +517,7 @@ namespace TrmrkMkFsDirsPair
                     config.NoteFileNamePfx,
                     pgArgs.FullDirNamePart,
                     config.NoteFileName,
-                    ".md");
+                    config.MdFileNameExtension);
             }
             else if (pgArgs.OpenMdFile)
             {
@@ -540,10 +579,22 @@ namespace TrmrkMkFsDirsPair
             return flagValue;
         }
 
+        /// <summary>
+        /// Flattens the provided 2 dimensional array into a 1 dimensional array.
+        /// </summary>
+        /// <param name="src">The input 2 dimensional array</param>
+        /// <returns>The flattened 1 dimensional array</returns>
         private object[] Flatten(
             params object[][] src) => src.SelectMany(
                 o => o).ToArray();
 
+        /// <summary>
+        /// Converts the provided arguments to a console string message tuple.
+        /// </summary>
+        /// <param name="prefix">The provided prefix</param>
+        /// <param name="text">The provided text</param>
+        /// <param name="splitter">The provided splitter</param>
+        /// <returns>An instance of type <see cref="ConsoleStrMsgTuple"/> created from the provided arguments.</returns>
         private ConsoleStrMsgTuple ToMsgTuple(
             string prefix,
             string text,

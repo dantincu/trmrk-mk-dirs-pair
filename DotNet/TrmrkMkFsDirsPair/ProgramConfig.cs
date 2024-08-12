@@ -12,6 +12,11 @@ namespace TrmrkMkFsDirsPair
     public class ProgramConfig
     {
         /// <summary>
+        /// Gets or sets the markdown file name extension.
+        /// </summary>
+        public string MdFileNameExtension { get; set; }
+
+        /// <summary>
         /// Gets or sets the name of the <c>.keep</c> file (the default being just that: "<c>.keep</c>")
         /// that will reside in the full name folder..
         /// </summary>
@@ -73,9 +78,39 @@ namespace TrmrkMkFsDirsPair
         public string UpdateDirNameIdxesCmdArgName { get; set; }
 
         /// <summary>
-        /// Gets or sets the name of the program arguments flag indicating that the sort order of pairs of folders should be reversed.
+        /// Gets or sets the name of the program arguments option indicating that a folders pair note book should be created.
         /// </summary>
-        public string ReverseSortOrderCmdArgName { get; set; }
+        public string CreateDirsPairNoteBookCmdArgName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the name of the program arguments option indicating that a basic note book should be created.
+        /// </summary>
+        public string CreateBasicNoteBookCmdArgName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the name of the program arguments option indicating the source folder used to create the note book.
+        /// </summary>
+        public string NoteBookSrcPathCmdArgName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the name of the program arguments option indicating the destination folder used to create the note book.
+        /// </summary>
+        public string NoteBookDestnPathCmdArgName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the prefix prepended to the names of all note item folders.
+        /// </summary>
+        public string NoteItemDirNamesPfx { get; set; }
+
+        /// <summary>
+        /// Gets or sets the prefix prepended to the names of all note internal (like the note files) folders.
+        /// </summary>
+        public string NoteInternalDirNamesPfx { get; set; }
+
+        /// <summary>
+        /// Gets or sets the basic note book note files directory name.
+        /// </summary>
+        public string BasicNoteBookNoteFilesDirName { get; set; }
 
         /// <summary>
         /// Gets or sets the maximum number of characters the full dir name part should contain.
@@ -103,11 +138,6 @@ namespace TrmrkMkFsDirsPair
         /// note item, the second one being the title of the note provided by the user.
         /// </summary>
         public string MdFileContentsTemplate { get; set; }
-
-        /// <summary>
-        /// Gets or sets a boolean value indicating whether the default sort order is ascending.
-        /// </summary>
-        public bool? DefaultSortOrderIsAscending { get; set; }
 
         /// <summary>
         /// Gets or sets the title macros.

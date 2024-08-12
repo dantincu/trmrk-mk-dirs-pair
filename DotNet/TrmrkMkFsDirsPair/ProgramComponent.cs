@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO.Enumeration;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -13,7 +14,7 @@ namespace TrmrkMkFsDirsPair
     /// <summary>
     /// The program's main component that does the core part of the program's execution.
     /// </summary>
-    internal class ProgramComponent
+    internal partial class ProgramComponent
     {
         public const string REPO_URL = "https://github.com/dantincu/trmrk-mk-dirs-pair";
 
@@ -23,39 +24,84 @@ namespace TrmrkMkFsDirsPair
         private readonly ProgramArgsRetriever pgArgsRetriever;
 
         /// <summary>
+        /// The program config retriever component.
+        /// </summary>
+        private readonly ProgramConfigRetriever pgCfgRetriever;
+
+        /// <summary>
         /// The only constructor containing the component dependencies.
         /// </summary>
         /// <param name="pgArgsRetriever">The program args retriever component</param>
         /// <exception cref="ArgumentNullException">Gets thrown when the value for <see cref="pgArgsRetriever" />
         /// is <c>null</c></exception>
         public ProgramComponent(
-            ProgramArgsRetriever pgArgsRetriever)
+            ProgramArgsRetriever pgArgsRetriever,
+            ProgramConfigRetriever pgCfgRetriever)
         {
             this.pgArgsRetriever = pgArgsRetriever ?? throw new ArgumentNullException(
                 nameof(pgArgsRetriever));
+
+            this.pgCfgRetriever = pgCfgRetriever ?? throw new ArgumentNullException(
+                nameof(pgCfgRetriever));
         }
 
         /// <summary>
-        /// The component's main method that does the core part of the program's execution.
+        /// The component's main method that runs the program.
+        /// </summary>
+        /// <param name="args">The raw command line args</param>
+        public void Run(
+            string[] args)
+        {
+            var pgArgs = pgArgsRetriever.GetProgramArgs(args);
+            Run(pgArgs);
+        }
+
+        /// <summary>
+        /// Runs the core part of the program.
         /// </summary>
         /// <param name="pgArgs">The program args parsed from the user provided arguments
         /// and normalized with the config values.</param>
-        public void Run(ProgramArgs pgArgs)
+        public void Run(
+            ProgramArgs pgArgs)
         {
-            var config = ProgramConfigRetriever.Instance.Value.Config;
-            string workDirPath = Path.GetFullPath(pgArgs.WorkDir);
+            var config = pgCfgRetriever.Config.Value;
 
-            if (pgArgs.UpdateFullDirName)
+            if (pgArgs.PrintHelp)
             {
-                UpdateFullDirName(pgArgs, config, workDirPath);
-            }
-            else if (pgArgs.UpdateDirNameIdxes != null)
-            {
-                UpdateDirNameIdxes(pgArgs, config, workDirPath);
+                pgArgsRetriever.PrintHelp(config);
             }
             else
             {
-                CreateDirsPair(pgArgs, config, workDirPath);
+                if (pgArgs.DumpConfigFile)
+                {
+                    pgCfgRetriever.DumpConfig(
+                        pgArgs.DumpConfigFileName);
+                }
+                else
+                {
+                    string workDirPath = Path.GetFullPath(pgArgs.WorkDir);
+
+                    if (pgArgs.UpdateFullDirName)
+                    {
+                        UpdateFullDirName(pgArgs, config, workDirPath);
+                    }
+                    else if (pgArgs.UpdateDirNameIdxes != null)
+                    {
+                        UpdateDirNameIdxes(pgArgs, config, workDirPath);
+                    }
+                    else if (pgArgs.CreateDirsPairNoteBookPath != null)
+                    {
+                        CreateNoteBook(pgArgs, config, true);
+                    }
+                    else if (pgArgs.CreateBasicNoteBookPath != null)
+                    {
+                        CreateNoteBook(pgArgs, config, false);
+                    }
+                    else
+                    {
+                        CreateDirsPair(pgArgs, config, workDirPath);
+                    }
+                }
             }
         }
 
@@ -75,18 +121,22 @@ namespace TrmrkMkFsDirsPair
             var mdFileName = Directory.GetFiles(
                 workDirPath).Select(
                     file => Path.GetFileName(file)).Single(
-                    file => Path.GetExtension(file) == ".md");
+                    file => Path.GetExtension(file) == config.MdFileNameExtension);
 
             string mdFilePath = Path.Combine(
                 workDirPath, mdFileName);
 
             if (pgArgs.Title == null)
             {
-                pgArgs.Title = File.ReadAllLines(mdFilePath).First(
-                    line => line.StartsWith("# ")).Substring("# ".Length).Trim();
+                pgArgs.Title = GetMdTitle(
+                    mdFilePath,
+                    out string mdTitleStr);
 
-                pgArgs.Title = HttpUtility.HtmlDecode(
-                    pgArgs.Title);
+                pgArgs.MdTitleStr ??= mdTitleStr;
+            }
+            else if (pgArgs.MdTitleStr == null)
+            {
+                pgArgs.MdTitleStr = HttpUtility.HtmlDecode(pgArgs.Title);
             }
             else
             {
@@ -133,7 +183,7 @@ namespace TrmrkMkFsDirsPair
                 config.NoteFileNamePfx,
                 pgArgs.FullDirNamePart,
                 config.NoteFileName,
-                ".md");
+                config.MdFileNameExtension);
 
             string newNoteFilePath = Path.Combine(workDirPath, newNoteFileName);
 
@@ -157,6 +207,23 @@ namespace TrmrkMkFsDirsPair
         }
 
         /// <summary>
+        /// Retrieves the title from the provided markdown file.
+        /// </summary>
+        /// <param name="mdFilePath">The provided markdown file path</param>
+        /// <param name="mdTitleStr">The markdown title string.</param>
+        /// <returns>The title extracted from the provided markdown file.</returns>
+        private string GetMdTitle(
+            string mdFilePath,
+            out string mdTitleStr)
+        {
+            mdTitleStr = File.ReadAllLines(mdFilePath).First(
+                line => line.StartsWith("# ")).Substring("# ".Length).Trim();
+
+            string title = HttpUtility.HtmlDecode(mdTitleStr);
+            return title;
+        }
+
+        /// <summary>
         /// Updates the folder name indexes according to the specified options.
         /// </summary>
         /// <param name="pgArgs">The program args parsed from the user provided arguments and normalized with the config values.</param>
@@ -169,27 +236,12 @@ namespace TrmrkMkFsDirsPair
             string workDirPath)
         {
             var entryNameRangesArr = pgArgs.UpdateDirNameIdxes;
-            bool sortOrderIsAscending = pgArgs.SortOrderIsAscending ?? true;
 
             var entryNamesArr = Directory.GetDirectories(
                 workDirPath).Select(
                     dirPath => Path.GetFileName(
-                        dirPath)).With(entriesNmrbl =>
-                        {
-                            if (sortOrderIsAscending)
-                            {
-                                entriesNmrbl = entriesNmrbl.OrderBy(
-                                    dirPath => dirPath);
-                            }
-                            else
-                            {
-                                entriesNmrbl = entriesNmrbl.OrderByDescending(
-                                    dirPath => dirPath);
-                            }
-
-                            string[] entriesArr = entriesNmrbl.ToArray();
-                            return entriesArr;
-                        });
+                        dirPath)).OrderBy(
+                dirPath => dirPath).ToArray();
 
             var entryNamesMap = entryNamesArr.Where(
                 entryName => !entryName.Contains(
@@ -264,8 +316,7 @@ namespace TrmrkMkFsDirsPair
                             };
 
                             newShortDirName = IncrementDirName(
-                                newShortDirName,
-                                sortOrderIsAscending);
+                                newShortDirName, true);
 
                             return retTuple;
                         });
@@ -407,7 +458,7 @@ namespace TrmrkMkFsDirsPair
             {
                 keepFileContents = string.Format(
                     config.KeepFileContentsTemplate,
-                    pgArgs.Title);
+                    pgArgs.MdTitleStr);
             }
 
             return keepFileContents;
@@ -475,72 +526,6 @@ namespace TrmrkMkFsDirsPair
 
             string newDirName = dirNamePfx + newDigits;
             return newDigits;
-        }
-
-        /// <summary>
-        /// Stores the dir names for renaming action.
-        /// </summary>
-        private class DirNamesTuple
-        {
-            /// <summary>
-            /// Gets or sets the short dir name.
-            /// </summary>
-            public string ShortDirName { get; init; }
-
-            /// <summary>
-            /// Gets or sets the temp short dir name.
-            /// </summary>
-            public string TempShortDirName { get; init; }
-
-            /// <summary>
-            /// Gets or sets the new short dir name.
-            /// </summary>
-            public string NewShortDirName { get; init; }
-
-            /// <summary>
-            /// Gets or sets the full dir name.
-            /// </summary>
-            public string FullDirName { get; init; }
-
-            /// <summary>
-            /// Gets or sets the temp full dir name.
-            /// </summary>
-            public string TempFullDirName { get; init; }
-
-            /// <summary>
-            /// Gets or sets the new full dir name.
-            /// </summary>
-            public string NewFullDirName { get; init; }
-
-            /// <summary>
-            /// Gets or sets the short dir path.
-            /// </summary>
-            public string ShortDirPath { get; init; }
-
-            /// <summary>
-            /// Gets or sets the temp short dir path.
-            /// </summary>
-            public string TempShortDirPath { get; init; }
-
-            /// <summary>
-            /// Gets or sets the new short dir path.
-            /// </summary>
-            public string NewShortDirPath { get; init; }
-
-            /// <summary>
-            /// Gets or sets the full dir path.
-            /// </summary>
-            public string FullDirPath { get; init; }
-
-            /// <summary>
-            /// Gets or sets the temp full dir path.
-            /// </summary>
-            public string TempFullDirPath { get; init; }
-
-            /// <summary>
-            /// Gets or sets the new full dir path.
-            /// </summary>
-            public string NewFullDirPath { get; init; }
         }
     }
 }

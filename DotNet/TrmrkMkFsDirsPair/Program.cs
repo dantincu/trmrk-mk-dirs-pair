@@ -3,33 +3,17 @@ using System.Runtime.CompilerServices;
 using TrmrkMkFsDirsPair;
 
 var services = new ServiceCollection();
-services.AddSingleton<IConsoleMsgPrinter, ConsoleMsgPrinter>();
-services.AddSingleton<IExpressionTextParser, ExpressionTextParser>();
-services.AddSingleton<ProgramConfigRetriever>();
-services.AddSingleton<ProgramArgsRetriever>();
-services.AddSingleton<ConsoleMsgPrinter>();
-services.AddSingleton<ProgramComponent>();
+services.AddScoped<IConsoleMsgPrinter, ConsoleMsgPrinter>();
+services.AddScoped<IExpressionTextParser, ExpressionTextParser>();
+services.AddScoped<ProgramConfigRetriever>();
+services.AddScoped<ProgramArgsRetriever>();
+services.AddScoped<ConsoleMsgPrinter>();
+services.AddScoped<ProgramComponent>();
 
 var svcProv = services.BuildServiceProvider();
 
 UtilsH.ExecuteProgram(() =>
 {
-    var pgArgsRetriever = svcProv.GetRequiredService<ProgramArgsRetriever>();
-    var pgArgs = pgArgsRetriever.GetProgramArgs(args);
-    var cfgRetriever = svcProv.GetRequiredService<ProgramConfigRetriever>();
-
-    if (pgArgs.PrintHelp)
-    {
-        pgArgsRetriever.PrintHelp(cfgRetriever.Config);
-    }
-    else
-    {
-        if (pgArgs.DumpConfigFile)
-        {
-            cfgRetriever.DumpConfig(pgArgs.DumpConfigFileName);
-        }
-
-        var pgComponent = svcProv.GetRequiredService<ProgramComponent>();
-        pgComponent.Run(pgArgs);
-    }
+    var pgComponent = svcProv.GetRequiredService<ProgramComponent>();
+    pgComponent.Run(args);
 });

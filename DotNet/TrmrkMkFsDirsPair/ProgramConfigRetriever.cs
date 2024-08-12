@@ -15,12 +15,17 @@ namespace TrmrkMkFsDirsPair
     internal class ProgramConfigRetriever
     {
         /// <summary>
-        /// The default value for the work dir user arguments flag.
+        /// The default markdown file name extension.
+        /// </summary>
+        const string MD_FILE_NAME_EXTENSION = ".md";
+
+        /// <summary>
+        /// The default name for the work dir user arguments flag.
         /// </summary>
         const string WORK_DIR = "wd";
 
         /// <summary>
-        /// The default value for the work dir user arguments flag.
+        /// The default name for the work dir user arguments flag.
         /// </summary>
         const string DUMP_CONFIG_FILE = "dmpc";
 
@@ -51,28 +56,23 @@ namespace TrmrkMkFsDirsPair
         const string JOIN_STR = "-";
 
         /// <summary>
-        /// The default value for the user arguments flag that indicates whether the newly created markdown file
+        /// The default name for the user arguments flag that indicates whether the newly created markdown file
         /// should be open in the default program after the pair of folders have been created.
         /// </summary>
         const string OPEN_MD_FILE = "o";
 
         /// <summary>
-        /// The default value for the work dir user arguments flag.
+        /// The default name for the work dir user arguments flag.
         /// </summary>
         const string UPDATE_FULL_DIR_NAME = "u";
 
         /// <summary>
-        /// The default value for the work dir user arguments flag.
+        /// The default name for the work dir user arguments flag.
         /// </summary>
         const string UPDATE_DIR_NAME_IDXES = "ux";
 
         /// <summary>
-        /// The default value for the reverse sort order arguments flag.
-        /// </summary>
-        const string REVERSE_SORT_ORDER = "rs";
-
-        /// <summary>
-        /// The default value for the print help message user arguments flag.
+        /// The default name for the print help message user arguments flag.
         /// </summary>
         const string PRINT_HELP_MESSAGE = "h";
 
@@ -87,6 +87,41 @@ namespace TrmrkMkFsDirsPair
         const string KEEP_FILE_CONTENTS_TEMPLATE = "";
 
         /// <summary>
+        /// The default name for the create folders pair note book option.
+        /// </summary>
+        const string CREATE_DIRS_PAIR_NOTE_BOOK = "mkdpnb";
+
+        /// <summary>
+        /// The default name for the create basic note book option.
+        /// </summary>
+        const string CREATE_BASIC_NOTE_BOOK = "mkbsnb";
+
+        /// <summary>
+        /// The default name for the note book source path option.
+        /// </summary>
+        const string NOTE_BOOK_SRC_PATH = "nbsrc";
+
+        /// <summary>
+        /// The default name for the note book destination path option.
+        /// </summary>
+        const string NOTE_BOOK_DESTN_PATH = "nbdstn";
+
+        /// <summary>
+        /// The default value for the note item folder names prefix.
+        /// </summary>
+        const string NOTE_ITEM_DIR_NAMES_PFX = "";
+
+        /// <summary>
+        /// The default value for the note internals folder names prefix.
+        /// </summary>
+        const string NOTE_INTERNAL_DIR_NAMES_PFX = "0";
+
+        /// <summary>
+        /// The default value for the basic note book note files directory name.
+        /// </summary>
+        const string BASIC_NOTE_BOOK_NOTE_FILES_DIR_NAME = "NF";
+
+        /// <summary>
         /// The default value for the maximum number of characters allowed for the full folder name part.
         /// </summary>
         const int MAX_DIR_NAME_LEN = 100;
@@ -96,14 +131,8 @@ namespace TrmrkMkFsDirsPair
         /// </summary>
         public ProgramConfigRetriever()
         {
-            Config = GetConfig();
+            Config = new Lazy<ProgramConfig>(() => GetConfig());
         }
-
-        /// <summary>
-        /// Gets the lazy component that exposes the single instance of this component.
-        /// </summary>
-        public static Lazy<ProgramConfigRetriever> Instance { get; } = new Lazy<ProgramConfigRetriever>(
-            () => new ProgramConfigRetriever());
 
         /// <summary>
         /// Gets the path of the config file.
@@ -114,7 +143,7 @@ namespace TrmrkMkFsDirsPair
         /// <summary>
         /// Gets the object containing the normalized config values.
         /// </summary>
-        public ProgramConfig Config { get; }
+        public Lazy<ProgramConfig> Config { get; }
 
         /// <summary>
         /// Serializes the provided config object (or the existing normalized one, if the provided argument is null)
@@ -128,7 +157,7 @@ namespace TrmrkMkFsDirsPair
             string dumpConfigFileName = null,
             ProgramConfig config = null)
         {
-            config ??= Config;
+            config ??= Config.Value;
             dumpConfigFileName ??= GetDumpConfigFileName();
 
             if (File.Exists(dumpConfigFileName))
@@ -173,6 +202,7 @@ namespace TrmrkMkFsDirsPair
         private void NormalizeConfig(
             ProgramConfig config)
         {
+            config.MdFileNameExtension ??= MD_FILE_NAME_EXTENSION;
             config.WorkDirCmdArgName ??= WORK_DIR;
             config.DumpConfigFileCmdArgName ??= DUMP_CONFIG_FILE;
             config.KeepFileName ??= KEEP;
@@ -182,14 +212,19 @@ namespace TrmrkMkFsDirsPair
             config.OpenMdFileCmdArgName ??= OPEN_MD_FILE;
             config.UpdateFullDirNameCmdArgName ??= UPDATE_FULL_DIR_NAME;
             config.UpdateDirNameIdxesCmdArgName ??= UPDATE_DIR_NAME_IDXES;
-            config.ReverseSortOrderCmdArgName ??= REVERSE_SORT_ORDER;
             config.PrintHelpMessage ??= PRINT_HELP_MESSAGE;
+            config.CreateDirsPairNoteBookCmdArgName ??= CREATE_DIRS_PAIR_NOTE_BOOK;
+            config.CreateBasicNoteBookCmdArgName ??= CREATE_BASIC_NOTE_BOOK;
+            config.NoteBookSrcPathCmdArgName ??= NOTE_BOOK_SRC_PATH;
+            config.NoteBookDestnPathCmdArgName ??= NOTE_BOOK_DESTN_PATH;
+            config.BasicNoteBookNoteFilesDirName ??= BASIC_NOTE_BOOK_NOTE_FILES_DIR_NAME;
             config.MaxDirNameLength = config.MaxDirNameLength.Nullify() ?? MAX_DIR_NAME_LEN;
+            config.NoteItemDirNamesPfx ??= NOTE_ITEM_DIR_NAMES_PFX;
+            config.NoteInternalDirNamesPfx ??= NOTE_INTERNAL_DIR_NAMES_PFX;
             config.KeepFileContentsTemplate ??= KEEP_FILE_CONTENTS_TEMPLATE;
             config.KeepFileContainsNoteJson ??= false;
             config.MdFileContentsTemplate ??= MD_FILE_CONTENTS_TEMPLATE;
             config.TitleMacros ??= new Dictionary<string, string>();
-            config.DefaultSortOrderIsAscending ??= true;
         }
 
         /// <summary>
