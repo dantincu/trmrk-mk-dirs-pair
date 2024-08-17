@@ -14,11 +14,17 @@
   "MdFileContentsTemplate": "# {0}  \n\n",
   "DefaultSortOrderIsAscending": false,
   "TitleMacros": {
-    "|tc|": "$terms-and-concepts$",
     "|a|": "$articles$",
-    "|ps|": "$products-and-services$",
+    "|gr|": "$geographical-regions$",
+    "|m|": "$misc$",
+    "|org|": "$organizations$",
     "|p|": "$persons$",
+    "|pl|": "$places$",
+    "|plgr|": "$places-and-geographical-regions$",
+    "|plrg|": "$places-and-regions$",
+    "|ps|": "$products-and-services$",
     "|pp|": "$public-persons$",
-    "|m|": "$misc$"
+    "|rg|": "$regions$",
+    "|tc|": "$terms-and-concepts$"
   }
 }
