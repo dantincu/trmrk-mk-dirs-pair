@@ -13,18 +13,8 @@
   "KeepFileContainsNoteJson": true,
   "MdFileContentsTemplate": "# {0}  \n\n",
   "DefaultSortOrderIsAscending": false,
-  "TitleMacros": {
-    "|a|": "$articles$",
-    "|gr|": "$geographical-regions$",
-    "|m|": "$misc$",
-    "|org|": "$organizations$",
-    "|p|": "$persons$",
-    "|pl|": "$places$",
-    "|plgr|": "$places-and-geographical-regions$",
-    "|plrg|": "$places-and-regions$",
-    "|ps|": "$products-and-services$",
-    "|pp|": "$public-persons$",
-    "|rg|": "$regions$",
-    "|tc|": "$terms-and-concepts$"
-  }
+  "TitleMacrosFilePathsArr": [
+    "trmrk-config.TitleMacrosMap.base.json",
+    "trmrk-config.TitleMacrosMap.main.json"
+  ]
 }

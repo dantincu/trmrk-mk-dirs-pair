@@ -224,7 +224,62 @@ namespace TrmrkMkFsDirsPair
             config.KeepFileContentsTemplate ??= KEEP_FILE_CONTENTS_TEMPLATE;
             config.KeepFileContainsNoteJson ??= false;
             config.MdFileContentsTemplate ??= MD_FILE_CONTENTS_TEMPLATE;
-            config.TitleMacros ??= new Dictionary<string, string>();
+
+            NormalizeTitleMacrosMap(
+                config.TitleMacros ??= new Dictionary<string, string>(),
+                config.TitleMacrosFilePathsArr);
+        }
+
+        /// <summary>
+        /// Normalizes the title macros map.
+        /// </summary>
+        /// <param name="existingMap">The existing title macros map</param>
+        /// <param name="mapFilePathsArr">An array containing file paths where additional title macros maps are located</param>
+        /// <returns>An array containing the normalized file paths where additional title macros maps are located</returns>
+        private string[]? NormalizeTitleMacrosMap(
+            Dictionary<string, string> existingMap,
+            string[]? mapFilePathsArr)
+        {
+            var configDirPath = Path.GetDirectoryName(
+                ConfigFilePath);
+
+            if (mapFilePathsArr != null)
+            {
+                mapFilePathsArr = mapFilePathsArr.Select(
+                    mapFilePath =>
+                    {
+                        if (!Path.IsPathRooted(mapFilePath))
+                        {
+                            mapFilePath = Path.Combine(
+                                configDirPath,
+                                mapFilePath);
+                        }
+
+                        Dictionary<string, string> additionalMap;
+
+                        try
+                        {
+                            additionalMap = JsonSerializer.Deserialize<Dictionary<string, string>>(
+                                File.ReadAllText(mapFilePath));
+                        }
+                        catch
+                        {
+                            additionalMap = null;
+                        }
+
+                        if (additionalMap != null)
+                        {
+                            foreach (var kvp in additionalMap)
+                            {
+                                existingMap[kvp.Key] = kvp.Value;
+                            }
+                        }
+
+                        return mapFilePath;
+                    }).ToArray();
+            }
+
+            return mapFilePathsArr;
         }
 
         /// <summary>

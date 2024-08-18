@@ -148,5 +148,10 @@ namespace TrmrkMkFsDirsPair
         /// Gets or sets the title macros.
         /// </summary>
         public Dictionary<string, string> TitleMacros { get; set; }
+
+        /// <summary>
+        /// Gets or sets the title macros file paths array.
+        /// </summary>
+        public string[]? TitleMacrosFilePathsArr { get; set; }
     }
 }
