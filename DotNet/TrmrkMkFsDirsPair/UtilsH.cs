@@ -6,6 +6,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace TrmrkMkFsDirsPair
 {
@@ -410,6 +411,28 @@ namespace TrmrkMkFsDirsPair
 
                 CopyDirectory(srcSubDirPath, destnSubDirPath);
             }
+        }
+
+        public static string EncodeForMd(string str)
+        {
+            str = HttpUtility.HtmlEncode(str);
+
+            str = str.Replace("\\", "\\\\");
+            str = str.Replace("_", "\\_");
+
+            return str;
+        }
+
+        public static string DecodeForMd(string str)
+        {
+            str = HttpUtility.HtmlDecode(str);
+
+            str = str.Split("\\\\").Select(
+                part => new string(part.Where(
+                    c => c != '\\').ToArray(
+                        ))).ToArray().JoinStr("\\");
+
+            return str;
         }
     }
 }

@@ -136,7 +136,7 @@ namespace TrmrkMkFsDirsPair
             }
             else if (pgArgs.MdTitleStr == null)
             {
-                pgArgs.MdTitleStr = HttpUtility.HtmlDecode(pgArgs.Title);
+                pgArgs.MdTitleStr = UtilsH.DecodeForMd(pgArgs.Title);
             }
             else
             {
@@ -219,7 +219,7 @@ namespace TrmrkMkFsDirsPair
             mdTitleStr = File.ReadAllLines(mdFilePath).First(
                 line => line.StartsWith("# ")).Substring("# ".Length).Trim();
 
-            string title = HttpUtility.HtmlDecode(mdTitleStr);
+            string title = UtilsH.DecodeForMd(mdTitleStr);
             return title;
         }
 

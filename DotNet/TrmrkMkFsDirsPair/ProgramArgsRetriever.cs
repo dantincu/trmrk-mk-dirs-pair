@@ -406,7 +406,7 @@ namespace TrmrkMkFsDirsPair
                 pgArgs.Title = NormalizeTitle(
                     nextArgs[0]);
 
-                pgArgs.MdTitleStr = HttpUtility.HtmlEncode(
+                pgArgs.MdTitleStr = UtilsH.EncodeForMd(
                     pgArgs.Title);
 
                 nextArgs.RemoveAt(0);
@@ -501,7 +501,7 @@ namespace TrmrkMkFsDirsPair
                 pgArgs.Title = NormalizeTitle(
                     nextArgs[0]);
 
-                pgArgs.MdTitleStr = HttpUtility.HtmlEncode(
+                pgArgs.MdTitleStr = UtilsH.EncodeForMd(
                     pgArgs.Title);
 
                 nextArgs.RemoveAt(0);
